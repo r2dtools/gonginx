@@ -1,6 +1,8 @@
 package rawparser
 
 import (
+	"strings"
+
 	"github.com/alecthomas/participle/v2"
 	"github.com/alecthomas/participle/v2/lexer"
 )
@@ -98,6 +100,22 @@ func (b *BlockDirective) FindEntriesWithIdentifier(identifier string) []*Entry {
 
 func (b *BlockDirective) GetParametersExpressions() []string {
 	return getExpressions(b.Parameters)
+}
+
+func (b *BlockDirective) GetEntriesByIdentifier(identifier string) []*Entry {
+	entries := []*Entry{}
+
+	for _, entry := range b.GetEntries() {
+		if entry == nil {
+			continue
+		}
+
+		if strings.ToLower(entry.GetIdentifier()) == identifier {
+			entries = append(entries, entry)
+		}
+	}
+
+	return entries
 }
 
 func (e *Entry) GetIdentifier() string {
