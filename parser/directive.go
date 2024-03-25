@@ -1,12 +1,29 @@
 package parser
 
+import "github.com/r2dtools/gonginx/internal/rawparser"
+
 type Directive struct {
-	Name          string
-	Values        []string
-	NewLineBefore bool
-	NewLineAfter  bool
+	rawDirective *rawparser.Directive
+	Name         string
+	Values       []string
+	Comments     []Comment
 }
 
-func (d *Directive) AddValues(values ...string) {
-	d.Values = append(d.Values, values...)
+func (d *Directive) GetFirstValue() string {
+	if len(d.Values) == 0 {
+		return ""
+	}
+
+	return d.Values[0]
+}
+
+func (d *Directive) AddValue(expression string) {
+	expressions := d.rawDirective.GetExpressions()
+	expressions = append(expressions, expression)
+
+	d.rawDirective.SetValues(expressions)
+}
+
+func (d *Directive) SetValues(expressions []string) {
+	d.rawDirective.SetValues(expressions)
 }

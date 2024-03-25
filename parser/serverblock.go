@@ -2,13 +2,10 @@ package parser
 
 import (
 	"strings"
-
-	"github.com/r2dtools/gonginx/internal/rawparser"
 )
 
 type ServerBlock struct {
-	FilePath string
-	block    *rawparser.BlockDirective
+	Block
 }
 
 type Listen struct {
@@ -17,78 +14,60 @@ type Listen struct {
 	Ipv6only bool
 }
 
-func (s ServerBlock) GetServerNames() []string {
+func (s *ServerBlock) GetServerNames() []string {
 	serverNames := []string{}
 
-	if s.block == nil {
+	directives := s.FindDirectives("server_name")
+
+	if len(directives) == 0 {
 		return serverNames
 	}
 
-	entries := s.block.GetEntriesByIdentifier("server_name")
-
-	if len(entries) == 0 || entries[0].Directive == nil {
-		return serverNames
-	}
-
-	for _, value := range entries[0].Directive.GetValues() {
-		serverNames = append(serverNames, strings.TrimSpace(value.Expression))
+	for _, value := range directives[0].Values {
+		serverNames = append(serverNames, strings.TrimSpace(value))
 	}
 
 	return serverNames
 }
 
-func (s ServerBlock) GetDocumentRoot() string {
-	if s.block == nil {
+func (s *ServerBlock) GetDocumentRoot() string {
+	directives := s.FindDirectives("root")
+
+	if len(directives) == 0 {
 		return ""
 	}
 
-	entries := s.block.GetEntriesByIdentifier("root")
-
-	if len(entries) == 0 || entries[0].Directive == nil {
-		return ""
-	}
-
-	return entries[0].Directive.GetFirstValueStr()
+	return directives[0].GetFirstValue()
 }
 
-func (s ServerBlock) GetListens() []Listen {
+func (s *ServerBlock) GetListens() []Listen {
 	listens := []Listen{}
 
-	if s.block == nil {
-		return listens
-	}
-
-	entries := s.block.GetEntriesByIdentifier("listen")
-	sslEntries := s.block.GetEntriesByIdentifier("ssl")
+	listenDirectives := s.FindDirectives("listen")
+	sslDirectives := s.FindDirectives("ssl")
 	serverSsl := false
 	ipv6only := false
 
 	// check first server block directive: ssl "on"
-	for _, sslEntry := range sslEntries {
-		directive := sslEntry.Directive
-
-		if directive != nil && directive.GetFirstValueStr() == "on" {
+	for _, sslDirective := range sslDirectives {
+		if sslDirective.GetFirstValue() == "on" {
 			serverSsl = true
 			break
 		}
 	}
 
-	for _, entry := range entries {
-		if entry == nil || entry.Directive == nil {
-			continue
-		}
-
-		hostPort := entry.Directive.GetFirstValueStr()
+	for _, listenDirective := range listenDirectives {
+		hostPort := listenDirective.GetFirstValue()
 		ssl := serverSsl
 
-		for _, value := range entry.Directive.GetValues() {
+		for _, value := range listenDirective.Values {
 			// check listen directive for "ssl" value
 			// listen 443 ssl http2;
-			if !ssl && value.Expression == "ssl" {
+			if !ssl && value == "ssl" {
 				ssl = true
 			}
 
-			if value.Expression == "ipv6only=on" {
+			if value == "ipv6only=on" {
 				ipv6only = true
 			}
 		}

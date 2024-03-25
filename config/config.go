@@ -5,14 +5,23 @@ import (
 )
 
 type Config interface {
-	GetHosts() ([]Host, error)
+	FindDirectives(directiveName string) []parser.Directive
+	FindUpstreams() ([]parser.Block, error)
 }
 
 type config struct {
 	parser *parser.Parser
 }
 
-func (c *config) GetHosts() ([]Host, error) {
+func (c *config) FindDirectives(directiveName string) []parser.Directive {
+	return c.parser.FindDirectives(directiveName)
+}
+
+func (c *config) FindUpstreams() ([]parser.Block, error) {
+	return nil, nil
+}
+
+/*func (c *config) GetHosts() ([]Host, error) {
 	var hosts []Host
 	serverBlocks := c.parser.GetServerBlocks()
 
@@ -52,10 +61,10 @@ func (c *config) GetHosts() ([]Host, error) {
 	}
 
 	return hosts, nil
-}
+}*/
 
-func GetConfig(serverRoot string) (Config, error) {
-	parser, err := parser.GetParser(serverRoot)
+func GetConfig(serverRoot string, configFile string) (Config, error) {
+	parser, err := parser.GetParser(serverRoot, configFile, true)
 
 	if err != nil {
 		return nil, err

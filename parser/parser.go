@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"container/list"
 	"errors"
 	"fmt"
 	"os"
@@ -9,13 +10,14 @@ import (
 	"sort"
 	"strings"
 
+	"golang.org/x/exp/slices"
+
 	"github.com/r2dtools/gonginx/internal/rawparser"
 	"github.com/unknwon/com"
 	"golang.org/x/exp/maps"
 )
 
-var includeDirective = "include"
-var repeatableDirectives = []string{"server_name", "listen", includeDirective, "rewrite", "add_header"}
+var repeatableDirectives = []string{"server_name", "listen", "include", "rewrite", "add_header"}
 
 var ErrInvalidDirective = errors.New("entry is not a directive")
 
@@ -24,6 +26,115 @@ type Parser struct {
 	parsedFiles map[string]*rawparser.Config
 	serverRoot  string
 	configRoot  string
+	quiteMode   bool
+}
+
+func (p *Parser) FindServerBlocks() []ServerBlock {
+	var serverBlocks []ServerBlock
+
+	blocks := p.FindBlocks("server")
+
+	if len(blocks) == 0 {
+		return serverBlocks
+	}
+
+	for _, block := range blocks {
+		serverBlocks = append(serverBlocks, ServerBlock{
+			Block: block,
+		})
+	}
+
+	return serverBlocks
+}
+
+func (p *Parser) FindServerBlocksByServerName(serverName string) []ServerBlock {
+	var serverBlocks []ServerBlock
+
+	for _, serverBlock := range p.FindServerBlocks() {
+		serverNames := serverBlock.GetServerNames()
+
+		if slices.Contains(serverNames, serverName) {
+			serverBlocks = append(serverBlocks, serverBlock)
+		}
+	}
+
+	return serverBlocks
+}
+
+func (p *Parser) FindUpstreamBlocks() []UpstreamBlock {
+	var upstreamBlocks []UpstreamBlock
+
+	blocks := p.FindBlocks("upstream")
+
+	if len(blocks) == 0 {
+		return upstreamBlocks
+	}
+
+	for _, block := range blocks {
+		upstreamBlocks = append(upstreamBlocks, UpstreamBlock{
+			Block: block,
+		})
+	}
+
+	return upstreamBlocks
+}
+
+func (p *Parser) FindUpstreamBlocksByName(upstreamName string) []UpstreamBlock {
+	var upstreamBlocks []UpstreamBlock
+
+	for _, upstreamBlock := range p.FindUpstreamBlocks() {
+		if upstreamBlock.Name == upstreamName {
+			upstreamBlocks = append(upstreamBlocks, upstreamBlock)
+		}
+	}
+
+	return upstreamBlocks
+}
+
+func (p *Parser) FindDirectives(directiveName string) []Directive {
+	var directives []Directive
+
+	keys := maps.Keys(p.parsedFiles)
+	sort.Strings(keys)
+
+	for _, key := range keys {
+		tree, ok := p.parsedFiles[key]
+
+		if !ok {
+			continue
+		}
+
+		entryList := list.New()
+
+		for _, entry := range tree.Entries {
+			directives = append(directives, findDirectivesRecursively(directiveName, p.parsedFiles, entry, entryList)...)
+		}
+	}
+
+	return directives
+}
+
+func (p *Parser) FindBlocks(blockName string) []Block {
+	var blocks []Block
+
+	keys := maps.Keys(p.parsedFiles)
+	sort.Strings(keys)
+
+	for _, key := range keys {
+		tree, ok := p.parsedFiles[key]
+
+		if !ok {
+			continue
+		}
+
+		entryList := list.New()
+
+		for _, entry := range tree.Entries {
+			blocks = append(blocks, findBlocksRecursively(blockName, p.parsedFiles, entry, entryList)...)
+		}
+	}
+
+	return blocks
 }
 
 func (p *Parser) parse() error {
@@ -120,6 +231,10 @@ func (p *Parser) parseFilesByPath(filePath string, override bool) ([]*rawparser.
 		content, err := os.ReadFile(file)
 
 		if err != nil {
+			if p.quiteMode {
+				continue
+			}
+
 			return nil, err
 		}
 
@@ -144,77 +259,27 @@ func (p *Parser) getAbsPath(path string) string {
 	return filepath.Clean(filepath.Join(p.serverRoot, path))
 }
 
-func (p *Parser) GetServerBlocks() []ServerBlock {
-	var blocks []ServerBlock
-	keys := maps.Keys(p.parsedFiles)
-	sort.Strings(keys)
+func GetParser(serverRootPath, configFilePath string, quiteMode bool) (*Parser, error) {
+	var err error
 
-	for _, key := range keys {
-		tree, ok := p.parsedFiles[key]
+	if serverRootPath != "" {
+		serverRootPath, err = filepath.Abs(serverRootPath)
 
-		if !ok {
-			continue
-		}
-
-		for _, entry := range tree.Entries {
-			blocks = append(blocks, p.getServerBlocksRecursively(key, entry)...)
+		if err != nil {
+			return nil, err
 		}
 	}
 
-	return blocks
-}
-
-func (p *Parser) getServerBlocksRecursively(filePath string, entry *rawparser.Entry) []ServerBlock {
-	var blocks []ServerBlock
-	block := entry.BlockDirective
-
-	if block == nil {
-		return blocks
+	if configFilePath == "" {
+		configFilePath = path.Join(serverRootPath, "nginx.conf")
 	}
 
-	serverBlock := ServerBlock{
-		FilePath: filePath,
-		block:    block,
+	if !filepath.IsAbs(configFilePath) {
+		configFilePath = filepath.Clean(filepath.Join(serverRootPath, configFilePath))
 	}
 
-	if strings.ToLower(entry.GetIdentifier()) == "server" {
-		blocks = append(blocks, serverBlock)
-
-		return blocks // server blocks could not be nested
-	}
-
-	for _, entry := range block.GetEntries() {
-		blocks = append(blocks, p.getServerBlocksRecursively(filePath, entry)...)
-	}
-
-	return blocks
-}
-
-func GetParser(serverRoot string) (*Parser, error) {
-	serverRoot, err := filepath.Abs(serverRoot)
-
-	if err != nil {
-		return nil, err
-	}
-
-	configFiles := []string{"nginx.conf"}
-	var configRoot string
-
-	for _, file := range configFiles {
-		path := path.Join(serverRoot, file)
-
-		if com.IsFile(path) {
-			configRoot = path
-			break
-		}
-	}
-
-	if configRoot == "" {
-		return nil, fmt.Errorf(
-			"could not find any of the config files \"%s\" in the directory \"%s\"",
-			strings.Join(configFiles, ", "),
-			serverRoot,
-		)
+	if !com.IsFile(configFilePath) {
+		return nil, fmt.Errorf("could not find '%s' config file", configFilePath)
 	}
 
 	rawParser, err := rawparser.GetRawParser()
@@ -225,8 +290,9 @@ func GetParser(serverRoot string) (*Parser, error) {
 
 	parser := Parser{
 		rawParser:  rawParser,
-		serverRoot: serverRoot,
-		configRoot: configRoot,
+		serverRoot: serverRootPath,
+		configRoot: configFilePath,
+		quiteMode:  quiteMode,
 	}
 
 	if err := parser.parse(); err != nil {
