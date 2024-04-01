@@ -83,6 +83,16 @@ func (s *ServerBlock) GetListens() []Listen {
 	return listens
 }
 
+func (s *ServerBlock) HasSSL() bool {
+	for _, listen := range s.GetListens() {
+		if listen.Ssl {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (s *ServerBlock) FindLocationBlocks() []LocationBlock {
 	return findLocationBlocks(&s.Block)
 }
