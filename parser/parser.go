@@ -10,8 +10,6 @@ import (
 	"sort"
 	"strings"
 
-	"golang.org/x/exp/slices"
-
 	"github.com/r2dtools/gonginx/internal/rawparser"
 	"github.com/unknwon/com"
 	"golang.org/x/exp/maps"
@@ -29,66 +27,24 @@ type Parser struct {
 	quiteMode   bool
 }
 
+func (p *Parser) FindHttpBlocks() []HttpBlock {
+	return findHttpBlocks(p)
+}
+
 func (p *Parser) FindServerBlocks() []ServerBlock {
-	var serverBlocks []ServerBlock
-
-	blocks := p.FindBlocks("server")
-
-	if len(blocks) == 0 {
-		return serverBlocks
-	}
-
-	for _, block := range blocks {
-		serverBlocks = append(serverBlocks, ServerBlock{
-			Block: block,
-		})
-	}
-
-	return serverBlocks
+	return findServerBlocks(p)
 }
 
 func (p *Parser) FindServerBlocksByServerName(serverName string) []ServerBlock {
-	var serverBlocks []ServerBlock
-
-	for _, serverBlock := range p.FindServerBlocks() {
-		serverNames := serverBlock.GetServerNames()
-
-		if slices.Contains(serverNames, serverName) {
-			serverBlocks = append(serverBlocks, serverBlock)
-		}
-	}
-
-	return serverBlocks
+	return findServerBlocksByServerName(p, serverName)
 }
 
 func (p *Parser) FindUpstreamBlocks() []UpstreamBlock {
-	var upstreamBlocks []UpstreamBlock
-
-	blocks := p.FindBlocks("upstream")
-
-	if len(blocks) == 0 {
-		return upstreamBlocks
-	}
-
-	for _, block := range blocks {
-		upstreamBlocks = append(upstreamBlocks, UpstreamBlock{
-			Block: block,
-		})
-	}
-
-	return upstreamBlocks
+	return findUpstreamBlocks(p)
 }
 
 func (p *Parser) FindUpstreamBlocksByName(upstreamName string) []UpstreamBlock {
-	var upstreamBlocks []UpstreamBlock
-
-	for _, upstreamBlock := range p.FindUpstreamBlocks() {
-		if upstreamBlock.Name == upstreamName {
-			upstreamBlocks = append(upstreamBlocks, upstreamBlock)
-		}
-	}
-
-	return upstreamBlocks
+	return findUpstreamBlocksByName(p, upstreamName)
 }
 
 func (p *Parser) FindDirectives(directiveName string) []Directive {
@@ -138,25 +94,7 @@ func (p *Parser) FindBlocks(blockName string) []Block {
 }
 
 func (p *Parser) FindLocationBlocks() []LocationBlock {
-	var locationBlocks []LocationBlock
-
-	for _, block := range p.FindBlocks("location") {
-		var modifier, location string
-
-		if len(block.Parameters) > 1 {
-			modifier = block.Parameters[0]
-			location = block.Parameters[1]
-		} else if len(block.Parameters) == 1 {
-			location = block.Parameters[0]
-		}
-
-		locationBlocks = append(locationBlocks, LocationBlock{
-			Modifier: modifier,
-			Location: location,
-		})
-	}
-
-	return locationBlocks
+	return findLocationBlocks(p)
 }
 
 func (p *Parser) parse() error {

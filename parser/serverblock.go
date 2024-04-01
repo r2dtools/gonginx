@@ -84,5 +84,5 @@ func (s *ServerBlock) GetListens() []Listen {
 }
 
 func (s *ServerBlock) FindLocationBlocks() []LocationBlock {
-	return s.parser.FindLocationBlocks()
+	return findLocationBlocks(&s.Block)
 }

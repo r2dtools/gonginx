@@ -5,25 +5,25 @@ type HttpBlock struct {
 }
 
 func (b *HttpBlock) FindBlocks(blockName string) []Block {
-	return b.parser.FindBlocks(blockName)
+	return b.Block.FindBlocks(blockName)
 }
 
 func (b *HttpBlock) FindServerBlocks() []ServerBlock {
-	return b.parser.FindServerBlocks()
+	return findServerBlocks(&b.Block)
 }
 
 func (b *HttpBlock) FindServerBlocksByServerName(serverName string) []ServerBlock {
-	return b.parser.FindServerBlocksByServerName(serverName)
+	return findServerBlocksByServerName(b, serverName)
 }
 
 func (b *HttpBlock) FindUpstreamBlocks() []UpstreamBlock {
-	return b.parser.FindUpstreamBlocks()
+	return findUpstreamBlocks(&b.Block)
 }
 
 func (b *HttpBlock) FindUpstreamBlocksByName(upstreamName string) []UpstreamBlock {
-	return b.parser.FindUpstreamBlocksByName(upstreamName)
+	return findUpstreamBlocksByName(b, upstreamName)
 }
 
 func (b *HttpBlock) FindLocationBlocks() []LocationBlock {
-	return b.parser.FindLocationBlocks()
+	return findLocationBlocks(&b.Block)
 }
