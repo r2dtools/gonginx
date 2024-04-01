@@ -7,7 +7,7 @@ import (
 )
 
 type Block struct {
-	configMap  map[string]*rawparser.Config
+	parser     *Parser
 	rawBlock   *rawparser.BlockDirective
 	Name       string
 	Parameters []string
@@ -19,7 +19,7 @@ func (b *Block) FindDirectives(directiveName string) []Directive {
 	entryList := list.New()
 
 	for _, entry := range b.rawBlock.GetEntries() {
-		directives = append(directives, findDirectivesRecursively(directiveName, b.configMap, entry, entryList)...)
+		directives = append(directives, b.parser.findDirectivesRecursively(directiveName, entry, entryList)...)
 	}
 
 	return directives
@@ -31,7 +31,7 @@ func (b *Block) FindBlocks(blockName string) []Block {
 	entryList := list.New()
 
 	for _, entry := range b.rawBlock.GetEntries() {
-		blocks = append(blocks, findBlocksRecursively(blockName, b.configMap, entry, entryList)...)
+		blocks = append(blocks, b.parser.findBlocksRecursively(blockName, entry, entryList)...)
 	}
 
 	return blocks

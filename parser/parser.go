@@ -107,7 +107,7 @@ func (p *Parser) FindDirectives(directiveName string) []Directive {
 		entryList := list.New()
 
 		for _, entry := range tree.Entries {
-			directives = append(directives, findDirectivesRecursively(directiveName, p.parsedFiles, entry, entryList)...)
+			directives = append(directives, p.findDirectivesRecursively(directiveName, entry, entryList)...)
 		}
 	}
 
@@ -130,7 +130,7 @@ func (p *Parser) FindBlocks(blockName string) []Block {
 		entryList := list.New()
 
 		for _, entry := range tree.Entries {
-			blocks = append(blocks, findBlocksRecursively(blockName, p.parsedFiles, entry, entryList)...)
+			blocks = append(blocks, p.findBlocksRecursively(blockName, entry, entryList)...)
 		}
 	}
 
@@ -257,6 +257,147 @@ func (p *Parser) getAbsPath(path string) string {
 	}
 
 	return filepath.Clean(filepath.Join(p.serverRoot, path))
+}
+
+func (p *Parser) findDirectivesRecursively(
+	directiveName string,
+	entry *rawparser.Entry,
+	entryList *list.List,
+) []Directive {
+	var directives []Directive
+	directive := entry.Directive
+	blockDirective := entry.BlockDirective
+
+	if directive != nil {
+		identifier := directive.Identifier
+
+		if identifier == "include" {
+			include := directive.GetFirstValueStr()
+			includeFiles, err := filepath.Glob(include)
+
+			if err != nil {
+				return directives
+			}
+
+			for _, includePath := range includeFiles {
+				includeConfig, ok := p.parsedFiles[includePath]
+
+				if ok {
+					for _, entry := range includeConfig.Entries {
+						directives = append(
+							directives,
+							p.findDirectivesRecursively(directiveName, entry, entryList)...,
+						)
+					}
+				}
+			}
+		}
+
+		if identifier == directiveName {
+			directives = append(directives, Directive{
+				rawDirective: directive,
+				Name:         directive.Identifier,
+				Values:       directive.GetExpressions(),
+				Comments:     p.findNearesComments(entryList),
+			})
+
+			return directives
+		}
+	}
+
+	if blockDirective != nil && blockDirective.Content != nil {
+		for _, entry := range blockDirective.Content.Entries {
+			if entry == nil {
+				continue
+			}
+
+			directives = append(directives, p.findDirectivesRecursively(directiveName, entry, entryList)...)
+		}
+
+		return directives
+	}
+
+	entryList.PushBack(entry)
+
+	return directives
+}
+
+func (p *Parser) findBlocksRecursively(
+	blockName string,
+	entry *rawparser.Entry,
+	entryList *list.List,
+) []Block {
+	var blocks []Block
+	directive := entry.Directive
+	blockDirective := entry.BlockDirective
+
+	if directive != nil && directive.Identifier == "include" {
+		include := directive.GetFirstValueStr()
+		includeFiles, err := filepath.Glob(include)
+
+		if err != nil {
+			return blocks
+		}
+
+		for _, includePath := range includeFiles {
+			includeConfig, ok := p.parsedFiles[includePath]
+
+			if ok {
+				for _, entry := range includeConfig.Entries {
+					blocks = append(
+						blocks,
+						p.findBlocksRecursively(blockName, entry, entryList)...,
+					)
+				}
+			}
+		}
+
+		return blocks
+	}
+
+	if blockDirective != nil {
+		identifier := blockDirective.Identifier
+
+		if identifier == blockName {
+			blocks = append(blocks, Block{
+				parser:     p,
+				rawBlock:   blockDirective,
+				Name:       blockDirective.Identifier,
+				Parameters: blockDirective.GetParametersExpressions(),
+				Comments:   p.findNearesComments(entryList),
+			})
+		}
+
+		return blocks
+	}
+
+	entryList.PushBack(entry)
+
+	return blocks
+}
+
+func (p *Parser) findNearesComments(entryList *list.List) []Comment {
+	var commets []Comment
+
+	for element := entryList.Back(); element != nil; element = element.Prev() {
+		entry := element.Value.(*rawparser.Entry)
+
+		if entry.Comment == nil {
+			break
+		}
+
+		if len(entry.StartNewLines) != 0 {
+			comment := Comment{
+				rawCommet: entry.Comment,
+				Content:   entry.Comment.Value,
+				Position:  CommentPosition(Before),
+			}
+			commets = append(commets, comment)
+		}
+
+	}
+
+	return commets
 }
 
 func GetParser(serverRootPath, configFilePath string, quiteMode bool) (*Parser, error) {
