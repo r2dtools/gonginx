@@ -137,6 +137,28 @@ func (p *Parser) FindBlocks(blockName string) []Block {
 	return blocks
 }
 
+func (p *Parser) FindLocationBlocks() []LocationBlock {
+	var locationBlocks []LocationBlock
+
+	for _, block := range p.FindBlocks("location") {
+		var modifier, location string
+
+		if len(block.Parameters) > 1 {
+			modifier = block.Parameters[0]
+			location = block.Parameters[1]
+		} else if len(block.Parameters) == 1 {
+			location = block.Parameters[0]
+		}
+
+		locationBlocks = append(locationBlocks, LocationBlock{
+			Modifier: modifier,
+			Location: location,
+		})
+	}
+
+	return locationBlocks
+}
+
 func (p *Parser) parse() error {
 	p.parsedFiles = make(map[string]*rawparser.Config)
 

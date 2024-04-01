@@ -23,3 +23,7 @@ func (b *HttpBlock) FindUpstreamBlocks() []UpstreamBlock {
 func (b *HttpBlock) FindUpstreamBlocksByName(upstreamName string) []UpstreamBlock {
 	return b.parser.FindUpstreamBlocksByName(upstreamName)
 }
+
+func (b *HttpBlock) FindLocationBlocks() []LocationBlock {
+	return b.parser.FindLocationBlocks()
+}
