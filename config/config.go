@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/r2dtools/gonginx/internal/rawdumper"
 	"github.com/r2dtools/gonginx/internal/rawparser"
 	"github.com/unknwon/com"
 	"golang.org/x/exp/maps"
@@ -20,7 +21,8 @@ var repeatableDirectives = []string{"server_name", "listen", "include", "rewrite
 var ErrInvalidDirective = errors.New("entry is not a directive")
 
 type Config struct {
-	rawConfig   *rawparser.RawParser
+	rawParser   *rawparser.RawParser
+	rawDumper   *rawdumper.RawDumper
 	parsedFiles map[string]*rawparser.Config
 	serverRoot  string
 	configRoot  string
@@ -68,6 +70,32 @@ func (c *Config) FindDirectives(directiveName string) []Directive {
 	}
 
 	return directives
+}
+
+func (c *Config) Dump() error {
+	for filePath, config := range c.parsedFiles {
+		content, err := c.rawDumper.Dump(config)
+
+		if err != nil {
+			return err
+		}
+
+		file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_TRUNC, 0666)
+
+		if err != nil {
+			return err
+		}
+
+		defer file.Close()
+
+		_, err = file.WriteString(content)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (c *Config) findDirectivesRecursivelyInLoop(
@@ -220,7 +248,7 @@ func (c *Config) parseFilesByPath(filePath string, override bool) ([]*rawparser.
 			return nil, err
 		}
 
-		config, err := c.rawConfig.Parse(string(content))
+		config, err := c.rawParser.Parse(string(content))
 
 		if err != nil {
 			return nil, err
@@ -461,14 +489,15 @@ func GetConfig(serverRootPath, configFilePath string, quiteMode bool) (*Config, 
 		return nil, fmt.Errorf("could not find '%s' config file", configFilePath)
 	}
 
-	rawConfig, err := rawparser.GetRawParser()
+	rawParser, err := rawparser.GetRawParser()
 
 	if err != nil {
 		return nil, err
 	}
 
 	parser := Config{
-		rawConfig:  rawConfig,
+		rawParser:  rawParser,
+		rawDumper:  &rawdumper.RawDumper{},
 		serverRoot: serverRootPath,
 		configRoot: configFilePath,
 		quiteMode:  quiteMode,

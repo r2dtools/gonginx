@@ -7,8 +7,8 @@ import (
 )
 
 func TestFindHttpBlocks(t *testing.T) {
-	parser := createParser(t)
-	httpBlocks := parser.FindHttpBlocks()
+	config := parseConfig(t)
+	httpBlocks := config.FindHttpBlocks()
 
 	assert.Len(t, httpBlocks, 1)
 	httpBlock := httpBlocks[0]
@@ -25,23 +25,23 @@ func TestFindHttpBlocks(t *testing.T) {
 }
 
 func TestFindServerBlocks(t *testing.T) {
-	parser := createParser(t)
-	serverBlocks := parser.FindServerBlocks()
+	config := parseConfig(t)
+	serverBlocks := config.FindServerBlocks()
 
 	assert.Len(t, serverBlocks, 8)
 }
 
 func TestFindLocationBlocks(t *testing.T) {
-	parser := createParser(t)
-	locationBlocks := parser.FindLocationBlocks()
+	config := parseConfig(t)
+	locationBlocks := config.FindLocationBlocks()
 
 	assert.Len(t, locationBlocks, 16)
 }
 
 func TestUpstreamBlocks(t *testing.T) {
-	parser := createParser(t)
+	config := parseConfig(t)
 
-	blocks := parser.FindUpstreamBlocksByName("dynamic")
+	blocks := config.FindUpstreamBlocksByName("dynamic")
 	assert.Len(t, blocks, 1)
 
 	block := blocks[0]
@@ -58,25 +58,25 @@ func TestUpstreamBlocks(t *testing.T) {
 }
 
 func TestFindServerBlocksByName(t *testing.T) {
-	parser := createParser(t)
+	config := parseConfig(t)
 
-	serverBlocks := parser.FindServerBlocksByServerName("example2.com")
+	serverBlocks := config.FindServerBlocksByServerName("example2.com")
 	assert.Len(t, serverBlocks, 1)
 
-	serverBlocks = parser.FindServerBlocksByServerName("example.com")
+	serverBlocks = config.FindServerBlocksByServerName("example.com")
 	assert.Len(t, serverBlocks, 2)
 
-	serverBlocks = parser.FindServerBlocksByServerName("*.example.com")
+	serverBlocks = config.FindServerBlocksByServerName("*.example.com")
 	assert.Len(t, serverBlocks, 1)
 
-	serverBlocks = parser.FindServerBlocksByServerName("www.example.com")
+	serverBlocks = config.FindServerBlocksByServerName("www.example.com")
 	assert.Len(t, serverBlocks, 1)
 }
 
 func TestFindServerBlocksDirectives(t *testing.T) {
-	parser := createParser(t)
+	config := parseConfig(t)
 
-	serverBlocks := parser.FindServerBlocksByServerName("example2.com")
+	serverBlocks := config.FindServerBlocksByServerName("example2.com")
 	assert.Len(t, serverBlocks, 1)
 
 	serverBlock := serverBlocks[0]
@@ -99,8 +99,8 @@ func TestFindServerBlocksDirectives(t *testing.T) {
 }
 
 func TestServerBlock(t *testing.T) {
-	parser := createParser(t)
-	serverBlocks := parser.FindServerBlocksByServerName("example2.com")
+	config := parseConfig(t)
+	serverBlocks := config.FindServerBlocksByServerName("example2.com")
 
 	assert.Len(t, serverBlocks, 1)
 
@@ -115,17 +115,17 @@ func TestServerBlock(t *testing.T) {
 }
 
 func TestFindDirectives(t *testing.T) {
-	parser := createParser(t)
+	config := parseConfig(t)
 
-	directives := parser.FindDirectives("server_name")
+	directives := config.FindDirectives("server_name")
 	assert.Len(t, directives, 8)
 	assert.Equal(t, directives[0].Values, []string{"example.com"})
 }
 
 func TestDirective(t *testing.T) {
-	parser := createParser(t)
+	config := parseConfig(t)
 
-	directives := parser.FindDirectives("ssl_certificate")
+	directives := config.FindDirectives("ssl_certificate")
 	assert.Len(t, directives, 5)
 
 	directive := directives[3]
@@ -139,9 +139,16 @@ func TestDirective(t *testing.T) {
 	assert.Equal(t, "# inline comment", comments[2].Content)
 }
 
-func createParser(t *testing.T) *Config {
-	parser, err := GetConfig("../test/nginx", "", false)
-	assert.Nilf(t, err, "could not create parser: %v", err)
+func TestDump(t *testing.T) {
+	config := parseConfig(t)
 
-	return parser
+	err := config.Dump()
+	assert.Nil(t, err)
+}
+
+func parseConfig(t *testing.T) *Config {
+	config, err := GetConfig("../test/nginx", "", false)
+	assert.Nilf(t, err, "could not create config: %v", err)
+
+	return config
 }
