@@ -15,23 +15,18 @@ type Block struct {
 }
 
 func (b *Block) FindDirectives(directiveName string) []Directive {
-	var directives []Directive
-	entryList := list.New()
+	prevEntries := list.New()
 
-	for _, entry := range b.rawBlock.GetEntries() {
-		directives = append(directives, b.config.findDirectivesRecursively(directiveName, entry, entryList)...)
-	}
-
-	return directives
+	return b.config.findDirectivesRecursivelyInLoop(directiveName, b.rawBlock.GetEntries(), prevEntries)
 }
 
 func (b *Block) FindBlocks(blockName string) []Block {
 	var blocks []Block
 
-	entryList := list.New()
+	prevEntries := list.New()
 
 	for _, entry := range b.rawBlock.GetEntries() {
-		blocks = append(blocks, b.config.findBlocksRecursively(blockName, entry, entryList)...)
+		blocks = append(blocks, b.config.findBlocksRecursively(blockName, entry, prevEntries)...)
 	}
 
 	return blocks

@@ -60,11 +60,33 @@ func (c *Config) FindDirectives(directiveName string) []Directive {
 			continue
 		}
 
-		entryList := list.New()
+		prevEntries := list.New()
+		directives = append(
+			directives,
+			c.findDirectivesRecursivelyInLoop(directiveName, tree.Entries, prevEntries)...,
+		)
+	}
 
-		for _, entry := range tree.Entries {
-			directives = append(directives, c.findDirectivesRecursively(directiveName, entry, entryList)...)
+	return directives
+}
+
+func (c *Config) findDirectivesRecursivelyInLoop(
+	directiveName string,
+	entries []*rawparser.Entry,
+	prevEntries *list.List,
+) []Directive {
+	var directives []Directive
+	entriesCount := len(entries)
+
+	for i := 0; i < entriesCount; i++ {
+		var nextEntry *rawparser.Entry
+		entry := entries[i]
+
+		if i < entriesCount-1 {
+			nextEntry = entries[i+1]
 		}
+
+		directives = append(directives, c.findDirectivesRecursively(directiveName, entry, nextEntry, prevEntries)...)
 	}
 
 	return directives
@@ -222,14 +244,15 @@ func (c *Config) getAbsPath(path string) string {
 func (c *Config) findDirectivesRecursively(
 	directiveName string,
 	entry *rawparser.Entry,
-	entryList *list.List,
+	nextEntry *rawparser.Entry,
+	prevEnties *list.List,
 ) []Directive {
 	var directives []Directive
 	directive := entry.Directive
 	blockDirective := entry.BlockDirective
 
-	if entryList == nil {
-		entryList = list.New()
+	if prevEnties == nil {
+		prevEnties = list.New()
 	}
 
 	if directive != nil {
@@ -247,22 +270,27 @@ func (c *Config) findDirectivesRecursively(
 				includeConfig, ok := c.parsedFiles[includePath]
 
 				if ok {
-					for _, entry := range includeConfig.Entries {
-						directives = append(
-							directives,
-							c.findDirectivesRecursively(directiveName, entry, nil)...,
-						)
-					}
+					directives = append(
+						directives,
+						c.findDirectivesRecursivelyInLoop(directiveName, includeConfig.Entries, prevEnties)...,
+					)
 				}
 			}
 		}
 
 		if identifier == directiveName {
+			comments := c.findNearesComments(prevEnties)
+			inlineComment := c.findDirectiveInlineComment(nextEntry)
+
+			if inlineComment != nil {
+				comments = append(comments, *inlineComment)
+			}
+
 			directives = append(directives, Directive{
 				rawDirective: directive,
 				Name:         directive.Identifier,
 				Values:       directive.GetExpressions(),
-				Comments:     c.findNearesComments(entryList),
+				Comments:     comments,
 			})
 
 			return directives
@@ -270,14 +298,15 @@ func (c *Config) findDirectivesRecursively(
 	}
 
 	if blockDirective != nil {
-		for _, entry := range blockDirective.GetEntries() {
-			directives = append(directives, c.findDirectivesRecursively(directiveName, entry, entryList)...)
-		}
+		directives = append(
+			directives,
+			c.findDirectivesRecursivelyInLoop(directiveName, blockDirective.GetEntries(), prevEnties)...,
+		)
 
 		return directives
 	}
 
-	entryList.PushBack(entry)
+	prevEnties.PushBack(entry)
 
 	return directives
 }
@@ -365,14 +394,22 @@ func (c *Config) findBlockInlineComment(content *rawparser.BlockContent) *Commen
 	firstEntry := content.Entries[0]
 
 	if firstEntry.Comment != nil {
-		return &Comment{
-			rawCommet: firstEntry.Comment,
-			Content:   strings.Trim(firstEntry.Comment.Value, "\n"),
-			Position:  CommentPosition(Inline),
-		}
+		comment := c.createComment(firstEntry.Comment, CommentPosition(Inline))
+
+		return &comment
 	}
 
 	return nil
+}
+
+func (c *Config) findDirectiveInlineComment(entry *rawparser.Entry) *Comment {
+	if entry == nil || entry.Comment == nil {
+		return nil
+	}
+
+	comment := c.createComment(entry.Comment, CommentPosition(Inline))
+
+	return &comment
 }
 
 func (c *Config) findNearesComments(entryList *list.List) []Comment {
@@ -385,16 +422,20 @@ func (c *Config) findNearesComments(entryList *list.List) []Comment {
 			break
 		}
 
-		comment := Comment{
-			rawCommet: entry.Comment,
-			Content:   strings.Trim(entry.Comment.Value, "\n"),
-			Position:  CommentPosition(Before),
-		}
+		comment := c.createComment(entry.Comment, CommentPosition(Before))
 		commets = append([]Comment{comment}, commets...)
 
 	}
 
 	return commets
+}
+
+func (c *Config) createComment(rawComment *rawparser.Comment, position CommentPosition) Comment {
+	return Comment{
+		rawCommet: rawComment,
+		Content:   strings.Trim(rawComment.Value, "\n"),
+		Position:  position,
+	}
 }
 
 func GetConfig(serverRootPath, configFilePath string, quiteMode bool) (*Config, error) {

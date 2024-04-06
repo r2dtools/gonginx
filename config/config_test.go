@@ -133,9 +133,10 @@ func TestDirective(t *testing.T) {
 	assert.Equal(t, "/opt/webmng/test/certificate/example.com.crt", directive.GetFirstValue())
 
 	comments := directive.Comments
-	assert.Len(t, comments, 2)
+	assert.Len(t, comments, 3)
 	assert.Equal(t, "# SSL", comments[0].Content)
 	assert.Equal(t, "# Some comment", comments[1].Content)
+	assert.Equal(t, "# inline comment", comments[2].Content)
 }
 
 func createParser(t *testing.T) *Config {
