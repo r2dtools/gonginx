@@ -1,4 +1,4 @@
-package parser
+package config
 
 import (
 	"container/list"
@@ -7,7 +7,7 @@ import (
 )
 
 type Block struct {
-	parser     *Parser
+	config     *Config
 	rawBlock   *rawparser.BlockDirective
 	Name       string
 	Parameters []string
@@ -19,7 +19,7 @@ func (b *Block) FindDirectives(directiveName string) []Directive {
 	entryList := list.New()
 
 	for _, entry := range b.rawBlock.GetEntries() {
-		directives = append(directives, b.parser.findDirectivesRecursively(directiveName, entry, entryList)...)
+		directives = append(directives, b.config.findDirectivesRecursively(directiveName, entry, entryList)...)
 	}
 
 	return directives
@@ -31,7 +31,7 @@ func (b *Block) FindBlocks(blockName string) []Block {
 	entryList := list.New()
 
 	for _, entry := range b.rawBlock.GetEntries() {
-		blocks = append(blocks, b.parser.findBlocksRecursively(blockName, entry, entryList)...)
+		blocks = append(blocks, b.config.findBlocksRecursively(blockName, entry, entryList)...)
 	}
 
 	return blocks

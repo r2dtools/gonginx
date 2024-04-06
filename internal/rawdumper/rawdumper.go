@@ -78,8 +78,13 @@ func (d *RawDumper) dumpBlockDirective(entry *rawparser.Entry) string {
 
 func (d *RawDumper) dumpDirective(entry *rawparser.Entry) string {
 	expression := strings.Join(entry.Directive.GetExpressions(), space)
+	identfier := d.getCurrentIdent() + entry.GetIdentifier()
 
-	return d.getCurrentIdent() + entry.GetIdentifier() + space + expression + ";"
+	if expression == "" {
+		return identfier + ";"
+	}
+
+	return identfier + space + expression + ";"
 }
 
 func (d *RawDumper) dumpComment(entry *rawparser.Entry) string {

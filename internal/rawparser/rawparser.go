@@ -25,7 +25,7 @@ type Comment struct {
 
 type Directive struct {
 	Identifier string   `@Ident`
-	Values     []*Value `@@+";"`
+	Values     []*Value `@@*";"`
 }
 
 type BlockDirective struct {
@@ -145,7 +145,7 @@ func GetRawParser() (*RawParser, error) {
 			{Name: `whitespace`, Pattern: `[^\S\r\n]+`, Action: nil},
 			{Name: `Comment`, Pattern: `(?:#)[^\n]*\n?`, Action: nil},
 			{Name: "BlockEnd", Pattern: `}`, Action: nil},
-			{Name: `Ident`, Pattern: `\w+`, Action: lexer.Push("IdentParse")},
+			{Name: `Ident`, Pattern: `[\w\-.\/]+`, Action: lexer.Push("IdentParse")},
 		},
 		"IdentParse": {
 			{Name: `NewLine`, Pattern: `[\r\n]+`, Action: nil},

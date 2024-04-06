@@ -7,14 +7,20 @@ import (
 	"strings"
 )
 
-type HostAddress struct {
+type ServerAddress struct {
 	IsIpv6 bool
 	Host   string
 	Port   string
 }
 
-// CreateHostAddressFromString parses address string and returns Address structure
-func CreateHostAddressFromString(addrStr string) HostAddress {
+type Listen struct {
+	HostPort string
+	Ssl      bool
+	Ipv6only bool
+}
+
+// CreateServerAddressFromString parses address string and returns Address structure
+func CreateServerAddressFromString(addrStr string) ServerAddress {
 	var host, port string
 	// ipv6 addresses starts with
 	if strings.HasPrefix(addrStr, "[") {
@@ -25,7 +31,7 @@ func CreateHostAddressFromString(addrStr string) HostAddress {
 			port = addrStr[lastIndex+2:]
 		}
 
-		return HostAddress{
+		return ServerAddress{
 			Host:   host,
 			Port:   port,
 			IsIpv6: true,
@@ -35,7 +41,7 @@ func CreateHostAddressFromString(addrStr string) HostAddress {
 	parts := strings.Split(addrStr, ":")
 
 	if len(parts) == 0 {
-		return HostAddress{}
+		return ServerAddress{}
 	}
 
 	if _, err := strconv.Atoi(parts[0]); err == nil {
@@ -48,24 +54,24 @@ func CreateHostAddressFromString(addrStr string) HostAddress {
 		}
 	}
 
-	return HostAddress{
+	return ServerAddress{
 		Host: host,
 		Port: port,
 	}
 }
 
-func (a HostAddress) IsWildcardPort() bool {
+func (a ServerAddress) IsWildcardPort() bool {
 	return a.Port == "*" || a.Port == ""
 }
 
 // GetHash returns addr hash based on host an port
-func (a HostAddress) GetHash() string {
+func (a ServerAddress) GetHash() string {
 	addr := fmt.Sprintf("%s:%s", a.Host, a.Port)
 
 	return base64.StdEncoding.EncodeToString([]byte(addr))
 }
 
-func (a HostAddress) ToString() string {
+func (a ServerAddress) ToString() string {
 	if a.Port != "" {
 		return fmt.Sprintf("%s:%s", a.Host, a.Port)
 	}
@@ -73,9 +79,9 @@ func (a HostAddress) ToString() string {
 	return a.Host
 }
 
-// GetAddressWithNewPort returns new a HostAddress instance with changed port
-func (a HostAddress) GetAddressWithNewPort(port string) HostAddress {
-	return HostAddress{
+// GetAddressWithNewPort returns new a ServerAddress instance with changed port
+func (a ServerAddress) GetAddressWithNewPort(port string) ServerAddress {
+	return ServerAddress{
 		Host:   a.Host,
 		Port:   port,
 		IsIpv6: a.IsIpv6,
@@ -85,7 +91,7 @@ func (a HostAddress) GetAddressWithNewPort(port string) HostAddress {
 // GetNormalizedHost returns normalized host.
 // Normalization occurres only for ipv6 address. Ipv4 returns as is.
 // For example: [fd00:dead:beaf::1] -> fd00:dead:beaf:0:0:0:0:1
-func (a HostAddress) GetNormalizedHost() string {
+func (a ServerAddress) GetNormalizedHost() string {
 	if a.IsIpv6 {
 		return a.GetNormalizedIpv6()
 	}
@@ -95,7 +101,7 @@ func (a HostAddress) GetNormalizedHost() string {
 
 // GetNormalizedIpv6 returns normalized IPv6
 // For example: [fd00:dead:beaf::1] -> fd00:dead:beaf:0:0:0:0:1
-func (a HostAddress) GetNormalizedIpv6() string {
+func (a ServerAddress) GetNormalizedIpv6() string {
 	if !a.IsIpv6 {
 		return ""
 	}
@@ -103,7 +109,7 @@ func (a HostAddress) GetNormalizedIpv6() string {
 	return strings.Join(a.normalizeIpv6(a.Host), ":")
 }
 
-func (a HostAddress) IsEqual(b HostAddress) bool {
+func (a ServerAddress) IsEqual(b ServerAddress) bool {
 	if a.Port != b.Port {
 		return false
 	}
@@ -111,13 +117,13 @@ func (a HostAddress) IsEqual(b HostAddress) bool {
 	return a.GetNormalizedHost() == b.GetNormalizedHost()
 }
 
-func (a HostAddress) normalizeIpv6(addr string) []string {
+func (a ServerAddress) normalizeIpv6(addr string) []string {
 	addr = strings.Trim(addr, "[]")
 
 	return a.explodeIpv6(addr)
 }
 
-func (a HostAddress) explodeIpv6(addr string) []string {
+func (a ServerAddress) explodeIpv6(addr string) []string {
 	result := []string{"0", "0", "0", "0", "0", "0", "0", "0"}
 	addrParts := strings.Split(addr, ":")
 	var appendToEnd bool

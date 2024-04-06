@@ -12,14 +12,14 @@ func TestParse(t *testing.T) {
 	parser, err := GetRawParser()
 	assert.Nilf(t, err, "could not create parser: %v", err)
 
-	content, err := os.ReadFile("../../test/unit/nginx.conf")
+	content, err := os.ReadFile("../../test/nginx.conf")
 	assert.Nilf(t, err, "could not read config file")
 
 	parsedConfig, err := parser.Parse(string(content))
 	assert.Nilf(t, err, "could not parse config: %v", err)
 
 	expectedData := &Config{}
-	data, err := os.ReadFile("../../test/unit/nginx.conf.json")
+	data, err := os.ReadFile("../../test/nginx.conf.json")
 	assert.Nilf(t, err, "could not read file with expected data: %v", err)
 
 	err = json.Unmarshal(data, expectedData)

@@ -100,7 +100,7 @@
             "Identifier": "include",
             "Values": [
                {
-                  "Expression": "/etc/nginx/modules-enabled/*.conf"
+                  "Expression": "modules-enabled/*.conf"
                }
             ]
          },
@@ -168,6 +168,15 @@
       },
       {
          "StartNewLines": null,
+         "Comment": {
+            "Value": "# http block\n"
+         },
+         "Directive": null,
+         "BlockDirective": null,
+         "EndNewLines": null
+      },
+      {
+         "StartNewLines": null,
          "Comment": null,
          "Directive": null,
          "BlockDirective": {
@@ -176,9 +185,16 @@
             "Content": {
                "Entries": [
                   {
-                     "StartNewLines": [
-                        "\n"
-                     ],
+                     "StartNewLines": null,
+                     "Comment": {
+                        "Value": "# http block inline comment\n"
+                     },
+                     "Directive": null,
+                     "BlockDirective": null,
+                     "EndNewLines": null
+                  },
+                  {
+                     "StartNewLines": null,
                      "Comment": null,
                      "Directive": {
                         "Identifier": "charset",
@@ -621,7 +637,7 @@
                         "Identifier": "include",
                         "Values": [
                            {
-                              "Expression": "/etc/nginx/conf.d/*.conf"
+                              "Expression": "conf.d/*.conf"
                            }
                         ]
                      },
@@ -637,7 +653,7 @@
                         "Identifier": "include",
                         "Values": [
                            {
-                              "Expression": "/etc/nginx/sites-enabled/*"
+                              "Expression": "sites-enabled/*"
                            }
                         ]
                      },
@@ -1658,6 +1674,56 @@
                                                       "Expression": "https://example.com$request_uri"
                                                    }
                                                 ]
+                                             },
+                                             "BlockDirective": null,
+                                             "EndNewLines": [
+                                                "\n"
+                                             ]
+                                          }
+                                       ]
+                                    }
+                                 },
+                                 "EndNewLines": [
+                                    "\n\n"
+                                 ]
+                              },
+                              {
+                                 "StartNewLines": null,
+                                 "Comment": null,
+                                 "Directive": null,
+                                 "BlockDirective": {
+                                    "Identifier": "location",
+                                    "Parameters": [
+                                       {
+                                          "Expression": "/test"
+                                       }
+                                    ],
+                                    "Content": {
+                                       "Entries": [
+                                          {
+                                             "StartNewLines": [
+                                                "\n"
+                                             ],
+                                             "Comment": null,
+                                             "Directive": {
+                                                "Identifier": "proxy_pass",
+                                                "Values": [
+                                                   {
+                                                      "Expression": "http://backend"
+                                                   }
+                                                ]
+                                             },
+                                             "BlockDirective": null,
+                                             "EndNewLines": [
+                                                "\n"
+                                             ]
+                                          },
+                                          {
+                                             "StartNewLines": null,
+                                             "Comment": null,
+                                             "Directive": {
+                                                "Identifier": "health_check",
+                                                "Values": null
                                              },
                                              "BlockDirective": null,
                                              "EndNewLines": [

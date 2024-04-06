@@ -2,7 +2,7 @@ package config
 
 import "testing"
 
-func TestCreateVhostAddressFromString(t *testing.T) {
+func TestCreateServerAddressFromString(t *testing.T) {
 	type AddrData struct {
 		AddrStr,
 		Host,
@@ -20,7 +20,7 @@ func TestCreateVhostAddressFromString(t *testing.T) {
 	}
 
 	for _, item := range items {
-		address := CreateHostAddressFromString(item.AddrStr)
+		address := CreateServerAddressFromString(item.AddrStr)
 
 		if address.Host != item.Host {
 			t.Errorf("expected host %s, got %s", item.Host, address.Host)
@@ -45,7 +45,7 @@ func TestIsWildcardPort(t *testing.T) {
 	}
 
 	for _, item := range items {
-		address := CreateHostAddressFromString(item.AddrStr)
+		address := CreateServerAddressFromString(item.AddrStr)
 
 		if address.IsWildcardPort() != item.isWildcard {
 			if item.isWildcard {
@@ -69,7 +69,7 @@ func TestGetNomalizedIpv6(t *testing.T) {
 	}
 
 	for _, item := range items {
-		address := CreateHostAddressFromString(item.ipv6Addr)
+		address := CreateServerAddressFromString(item.ipv6Addr)
 		normalizedIpv6 := address.GetNormalizedIpv6()
 
 		if normalizedIpv6 != item.normaliedIpv6 {

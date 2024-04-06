@@ -2,6 +2,7 @@ package rawdumper
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"testing"
 
@@ -11,7 +12,7 @@ import (
 
 func TestDump(t *testing.T) {
 	config := &rawparser.Config{}
-	configData, err := os.ReadFile("../../test/unit/nginx.conf.json")
+	configData, err := os.ReadFile("../../test/nginx.conf.json")
 	assert.Nilf(t, err, "could not read file with parsed nginx config: %v", err)
 
 	err = json.Unmarshal(configData, config)
@@ -19,9 +20,11 @@ func TestDump(t *testing.T) {
 
 	dumper := &RawDumper{}
 	result, err := dumper.Dump(config)
+
+	fmt.Println(result)
 	assert.Nilf(t, err, "could not dump parsed nginx config: %v", err)
 
-	dumpedConfig, err := os.ReadFile("../../test/unit/nginx.dumped.conf")
+	dumpedConfig, err := os.ReadFile("../../test/nginx.dumped.conf")
 	assert.Nilf(t, err, "could not read file with dumped nginx config: %v", err)
 	assert.Equal(t, string(dumpedConfig), result, "dumped config is invalid")
 }

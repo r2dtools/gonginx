@@ -1,4 +1,4 @@
-package parser
+package config
 
 import "golang.org/x/exp/slices"
 
@@ -80,7 +80,7 @@ func findUpstreamBlocksByName(finder upstreamBlockFinder, upstreamName string) [
 	var upstreamBlocks []UpstreamBlock
 
 	for _, upstreamBlock := range finder.FindUpstreamBlocks() {
-		if upstreamBlock.Name == upstreamName {
+		if upstreamBlock.GetUpstreamName() == upstreamName {
 			upstreamBlocks = append(upstreamBlocks, upstreamBlock)
 		}
 	}

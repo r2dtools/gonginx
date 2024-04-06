@@ -1,4 +1,4 @@
-package parser
+package config
 
 type UpstreamServer struct {
 	Directive

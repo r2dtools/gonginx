@@ -1,4 +1,4 @@
-package parser
+package config
 
 import "github.com/r2dtools/gonginx/internal/rawparser"
 

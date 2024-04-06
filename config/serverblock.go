@@ -1,4 +1,4 @@
-package parser
+package config
 
 import (
 	"strings"
@@ -6,12 +6,6 @@ import (
 
 type ServerBlock struct {
 	Block
-}
-
-type Listen struct {
-	HostPort string
-	Ssl      bool
-	Ipv6only bool
 }
 
 func (s *ServerBlock) GetServerNames() []string {
@@ -81,6 +75,46 @@ func (s *ServerBlock) GetListens() []Listen {
 	}
 
 	return listens
+}
+
+func (s *ServerBlock) IsIpv6Enabled() bool {
+	addresses := s.GetAddresses()
+
+	for _, address := range addresses {
+		if address.IsIpv6 {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (s *ServerBlock) IsIpv4Enabled() bool {
+	addresses := s.GetAddresses()
+
+	if len(addresses) == 0 {
+		return true
+	}
+
+	for _, address := range addresses {
+		if !address.IsIpv6 {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (s *ServerBlock) GetAddresses() []ServerAddress {
+	listens := s.GetListens()
+	addresses := []ServerAddress{}
+
+	for _, listen := range listens {
+		address := CreateServerAddressFromString(listen.HostPort)
+		addresses = append(addresses, address)
+	}
+
+	return addresses
 }
 
 func (s *ServerBlock) HasSSL() bool {

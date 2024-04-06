@@ -1,4 +1,4 @@
-package parser
+package config
 
 type UpstreamBlock struct {
 	Block
