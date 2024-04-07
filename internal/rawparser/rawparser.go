@@ -42,6 +42,16 @@ type BlockContent struct {
 	Entries []*Entry `@@*`
 }
 
+func (c *Config) GetEntries() []*Entry {
+	entries := make([]*Entry, 0)
+
+	if c.Entries == nil {
+		return entries
+	}
+
+	return c.Entries
+}
+
 func (d *Directive) GetFirstValueStr() string {
 	if len(d.Values) == 0 {
 		return ""
@@ -100,6 +110,14 @@ func (b *BlockDirective) FindEntriesWithIdentifier(identifier string) []*Entry {
 
 func (b *BlockDirective) GetParametersExpressions() []string {
 	return getExpressions(b.Parameters)
+}
+
+func (b *BlockDirective) SetEntries(entries []*Entry) {
+	if b.Content == nil {
+		b.Content = &BlockContent{}
+	}
+
+	b.Content.Entries = entries
 }
 
 func (b *BlockDirective) GetEntriesByIdentifier(identifier string) []*Entry {

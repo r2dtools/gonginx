@@ -308,7 +308,7 @@ func (c *Config) findDirectivesRecursively(
 
 		if identifier == directiveName {
 			comments := c.findNearesComments(prevEnties)
-			inlineComment := c.findDirectiveInlineComment(nextEntry)
+			inlineComment := c.findDirectiveInlineComment(entry, nextEntry)
 
 			if inlineComment != nil {
 				comments = append(comments, *inlineComment)
@@ -430,12 +430,16 @@ func (c *Config) findBlockInlineComment(content *rawparser.BlockContent) *Commen
 	return nil
 }
 
-func (c *Config) findDirectiveInlineComment(entry *rawparser.Entry) *Comment {
-	if entry == nil || entry.Comment == nil {
+func (c *Config) findDirectiveInlineComment(entry, nextEntry *rawparser.Entry) *Comment {
+	if nextEntry == nil || nextEntry.Comment == nil {
 		return nil
 	}
 
-	comment := c.createComment(entry.Comment, CommentPosition(Inline))
+	if len(entry.EndNewLines) != 0 || len(nextEntry.StartNewLines) != 0 {
+		return nil
+	}
+
+	comment := c.createComment(nextEntry.Comment, CommentPosition(Inline))
 
 	return &comment
 }
@@ -461,7 +465,7 @@ func (c *Config) findNearesComments(entryList *list.List) []Comment {
 func (c *Config) createComment(rawComment *rawparser.Comment, position CommentPosition) Comment {
 	return Comment{
 		rawCommet: rawComment,
-		Content:   strings.Trim(rawComment.Value, "\n"),
+		Content:   strings.Trim(rawComment.Value, "\n# "),
 		Position:  position,
 	}
 }

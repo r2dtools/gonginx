@@ -18,10 +18,10 @@ func TestFindHttpBlocks(t *testing.T) {
 	assert.Len(t, httpBlock.Comments, 2)
 
 	commentBefore := httpBlock.Comments[0]
-	assert.Equal(t, "# http block", commentBefore.Content)
+	assert.Equal(t, "http block", commentBefore.Content)
 
 	inlineComment := httpBlock.Comments[1]
-	assert.Equal(t, "# http block inline comment", inlineComment.Content)
+	assert.Equal(t, "http block inline comment", inlineComment.Content)
 }
 
 func TestFindServerBlocks(t *testing.T) {
@@ -134,9 +134,9 @@ func TestDirective(t *testing.T) {
 
 	comments := directive.Comments
 	assert.Len(t, comments, 3)
-	assert.Equal(t, "# SSL", comments[0].Content)
-	assert.Equal(t, "# Some comment", comments[1].Content)
-	assert.Equal(t, "# inline comment", comments[2].Content)
+	assert.Equal(t, "SSL", comments[0].Content)
+	assert.Equal(t, "Some comment", comments[1].Content)
+	assert.Equal(t, "inline comment", comments[2].Content)
 }
 
 func TestDump(t *testing.T) {
@@ -146,9 +146,61 @@ func TestDump(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+func TestDirectiveSetValue(t *testing.T) {
+	certPath := "/path/to/certificate"
+
+	config, directive := getServerBlockDirective(t, "example2.com", "ssl_certificate_key")
+	directive.SetValue(certPath)
+	err := config.Dump()
+	assert.Nil(t, err)
+
+	config, directive = getServerBlockDirective(t, "example2.com", "ssl_certificate_key")
+	assert.Equal(t, certPath, directive.GetFirstValue())
+}
+
+func TestAddDirective(t *testing.T) {
+	config, serverBlock := getServerBlock(t, "example2.com")
+	serverBlock.AddDirective("test", []string{"test_value"})
+	err := config.Dump()
+	assert.Nil(t, err)
+
+	config, directive := getServerBlockDirective(t, "example2.com", "test")
+	assert.Equal(t, "test_value", directive.GetFirstValue())
+}
+
+func TestDeleteDirectiveByName(t *testing.T) {
+	config, serverBlock := getServerBlock(t, "example2.com")
+	serverBlock.DeleteDirectiveByName("listen")
+	err := config.Dump()
+	assert.Nil(t, err)
+
+	_, serverBlock = getServerBlock(t, "example2.com")
+	directives := serverBlock.FindDirectives("listen")
+	assert.Empty(t, directives)
+}
+
 func parseConfig(t *testing.T) *Config {
 	config, err := GetConfig("../test/nginx", "", false)
 	assert.Nilf(t, err, "could not create config: %v", err)
 
 	return config
+}
+
+func getServerBlockDirective(t *testing.T, serverName, directiveName string) (*Config, Directive) {
+	config, serverBlock := getServerBlock(t, serverName)
+	directives := serverBlock.FindDirectives(directiveName)
+	assert.Len(t, directives, 1)
+
+	return config, directives[0]
+}
+
+func getServerBlock(t *testing.T, serverName string) (*Config, ServerBlock) {
+	config := parseConfig(t)
+
+	serverBlocks := config.FindServerBlocksByServerName(serverName)
+	assert.Len(t, serverBlocks, 1)
+
+	serverBlock := serverBlocks[0]
+
+	return config, serverBlock
 }

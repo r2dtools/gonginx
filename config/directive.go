@@ -27,3 +27,7 @@ func (d *Directive) AddValue(expression string) {
 func (d *Directive) SetValues(expressions []string) {
 	d.rawDirective.SetValues(expressions)
 }
+
+func (d *Directive) SetValue(expression string) {
+	d.SetValues([]string{expression})
+}
