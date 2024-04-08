@@ -72,6 +72,23 @@ func TestDeleteDirectiveByNameInServerBlock(t *testing.T) {
 	})
 }
 
+func TestDeleteDirectiveInServerBlock(t *testing.T) {
+	testWithConfigFileRollback(t, example2ConfigFilePath, func(t *testing.T) {
+		config, serverBlock := getServerBlock(t, "example2.com")
+		directives := serverBlock.FindDirectives("listen")
+		assert.Len(t, directives, 4)
+
+		serverBlock.DeleteDirective(directives[2])
+		err := config.Dump()
+		assert.Nil(t, err)
+
+		_, serverBlock = getServerBlock(t, "example2.com")
+		directives = serverBlock.FindDirectives("listen")
+		assert.Len(t, directives, 3)
+		assert.Equal(t, []string{"443", "ssl"}, directives[2].Values)
+	})
+}
+
 func getServerBlockDirective(t *testing.T, serverName, directiveName string) (*Config, Directive) {
 	config, serverBlock := getServerBlock(t, serverName)
 	directives := serverBlock.FindDirectives(directiveName)
