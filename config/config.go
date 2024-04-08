@@ -29,6 +29,22 @@ type Config struct {
 	quiteMode   bool
 }
 
+func (c *Config) GetConfigFile(configFileName string) *ConfigFile {
+	for configFilePath, config := range c.parsedFiles {
+		pConfigFileName := filepath.Base(configFilePath)
+
+		if configFileName == pConfigFileName {
+			return &ConfigFile{
+				FilePath:   configFilePath,
+				configFile: config,
+				config:     c,
+			}
+		}
+	}
+
+	return nil
+}
+
 func (c *Config) FindHttpBlocks() []HttpBlock {
 	return findHttpBlocks(c)
 }
@@ -70,6 +86,33 @@ func (c *Config) FindDirectives(directiveName string) []Directive {
 	}
 
 	return directives
+}
+
+func (c *Config) FindBlocks(blockName string) []Block {
+	var blocks []Block
+
+	keys := maps.Keys(c.parsedFiles)
+	sort.Strings(keys)
+
+	for _, key := range keys {
+		tree, ok := c.parsedFiles[key]
+
+		if !ok {
+			continue
+		}
+
+		entryList := list.New()
+
+		for _, entry := range tree.Entries {
+			blocks = append(blocks, c.findBlocksRecursively(blockName, entry, entryList)...)
+		}
+	}
+
+	return blocks
+}
+
+func (c *Config) FindLocationBlocks() []LocationBlock {
+	return findLocationBlocks(c)
 }
 
 func (c *Config) Dump() error {
@@ -118,33 +161,6 @@ func (c *Config) findDirectivesRecursivelyInLoop(
 	}
 
 	return directives
-}
-
-func (c *Config) FindBlocks(blockName string) []Block {
-	var blocks []Block
-
-	keys := maps.Keys(c.parsedFiles)
-	sort.Strings(keys)
-
-	for _, key := range keys {
-		tree, ok := c.parsedFiles[key]
-
-		if !ok {
-			continue
-		}
-
-		entryList := list.New()
-
-		for _, entry := range tree.Entries {
-			blocks = append(blocks, c.findBlocksRecursively(blockName, entry, entryList)...)
-		}
-	}
-
-	return blocks
-}
-
-func (c *Config) FindLocationBlocks() []LocationBlock {
-	return findLocationBlocks(c)
 }
 
 func (c *Config) parse() error {

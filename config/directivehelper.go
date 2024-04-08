@@ -10,7 +10,19 @@ type entryContainer interface {
 	SetEntries(entries []*rawparser.Entry)
 }
 
-func deleteDirective(c entryContainer, callback func(directive *rawparser.Directive) bool) {
+func deleteDirectiveByName(c entryContainer, directiveName string) {
+	deleteDirectiveInEntityContainer(c, func(rawDirective *rawparser.Directive) bool {
+		return rawDirective.Identifier == directiveName
+	})
+}
+
+func deleteDirective(c entryContainer, directive Directive) {
+	deleteDirectiveInEntityContainer(c, func(rawDirective *rawparser.Directive) bool {
+		return rawDirective.Identifier == directive.Name && slices.Equal(rawDirective.GetExpressions(), directive.Values)
+	})
+}
+
+func deleteDirectiveInEntityContainer(c entryContainer, callback func(directive *rawparser.Directive) bool) {
 	entries := c.GetEntries()
 	dEntries := []*rawparser.Entry{}
 	indexesToDelete := []int{}
@@ -33,6 +45,37 @@ func deleteDirective(c entryContainer, callback func(directive *rawparser.Direct
 	}
 
 	setEntries(c, dEntries)
+}
+
+func addDirective(c entryContainer, name string, values []string) {
+	entries := c.GetEntries()
+	directiveValues := []*rawparser.Value{}
+
+	for _, value := range values {
+		directiveValues = append(directiveValues, &rawparser.Value{Expression: value})
+	}
+
+	directive := &rawparser.Directive{
+		Identifier: name,
+		Values:     directiveValues,
+	}
+	entry := &rawparser.Entry{
+		Directive:   directive,
+		EndNewLines: []string{"\n"},
+	}
+
+	var prevEntry *rawparser.Entry
+
+	if len(entries) > 0 {
+		prevEntry = entries[len(entries)-1]
+	}
+
+	if prevEntry == nil || len(prevEntry.EndNewLines) == 0 {
+		entry.StartNewLines = []string{"\n"}
+	}
+
+	entries = append(entries, entry)
+	c.SetEntries(entries)
 }
 
 func findDirectiveCommentIndexesToDelete(entries []*rawparser.Entry, index int) []int {

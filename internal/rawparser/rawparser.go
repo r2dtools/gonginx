@@ -52,6 +52,10 @@ func (c *Config) GetEntries() []*Entry {
 	return c.Entries
 }
 
+func (c *Config) SetEntries(entries []*Entry) {
+	c.Entries = entries
+}
+
 func (d *Directive) GetFirstValueStr() string {
 	if len(d.Values) == 0 {
 		return ""
