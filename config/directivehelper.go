@@ -66,7 +66,7 @@ func addDirective(c entryContainer, name string, values []string, begining bool)
 
 	var prevEntry *rawparser.Entry
 
-	if len(entries) > 0 {
+	if len(entries) > 0 && !begining {
 		prevEntry = entries[len(entries)-1]
 	}
 

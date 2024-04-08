@@ -50,7 +50,7 @@ func TestServerBlock(t *testing.T) {
 func TestAddDirectiveInServerBlock(t *testing.T) {
 	testWithConfigFileRollback(t, example2ConfigFilePath, func(t *testing.T) {
 		config, serverBlock := getServerBlock(t, "example2.com")
-		serverBlock.AddDirective("test", []string{"test_value"}, false)
+		serverBlock.AddDirective("test", []string{"test_value"}, true)
 		err := config.Dump()
 		assert.Nil(t, err)
 
