@@ -32,8 +32,8 @@ func (b *Block) FindBlocks(blockName string) []Block {
 	return blocks
 }
 
-func (b *Block) AddDirective(name string, values []string) {
-	addDirective(b.rawBlock, name, values)
+func (b *Block) AddDirective(name string, values []string, begining bool) {
+	addDirective(b.rawBlock, name, values, begining)
 }
 
 func (b *Block) DeleteDirective(directive Directive) {

@@ -1,0 +1,92 @@
+package config
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+func TestFindDirectivesInServerBlock(t *testing.T) {
+	config := parseConfig(t)
+
+	serverBlocks := config.FindServerBlocksByServerName("example2.com")
+	assert.Len(t, serverBlocks, 1)
+
+	serverBlock := serverBlocks[0]
+	directives := serverBlock.FindDirectives("ssl_certificate_key")
+	assert.Len(t, directives, 1)
+
+	directive := directives[0]
+	assert.Equal(t, "ssl_certificate_key", directive.Name)
+	assert.ElementsMatch(t, directive.Values, []string{"/opt/webmng/test/certificate/example.com.key"})
+
+	directives = serverBlock.FindDirectives("listen")
+	assert.Len(t, directives, 4)
+	assert.ElementsMatch(t, directives[2].Values, []string{"[::]:443", "ssl", "ipv6only=on"})
+
+	locations := serverBlock.FindLocationBlocks()
+	assert.Len(t, locations, 1)
+
+	commments := serverBlock.Comments
+	assert.Len(t, commments, 19)
+}
+
+func TestServerBlock(t *testing.T) {
+	config := parseConfig(t)
+	serverBlocks := config.FindServerBlocksByServerName("example2.com")
+
+	assert.Len(t, serverBlocks, 1)
+
+	block := serverBlocks[0]
+	assert.Equal(t, "server", block.Name)
+	assert.ElementsMatch(t, block.GetServerNames(), []string{"example2.com", "www.example2.com"})
+	assert.Equal(t, true, block.HasSSL())
+	assert.Equal(t, "/var/www/html", block.GetDocumentRoot())
+
+	listens := block.GetListens()
+	assert.Len(t, listens, 4)
+}
+
+func TestAddDirectiveInServerBlock(t *testing.T) {
+	testWithConfigFileRollback(t, example2ConfigFilePath, func(t *testing.T) {
+		config, serverBlock := getServerBlock(t, "example2.com")
+		serverBlock.AddDirective("test", []string{"test_value"}, false)
+		err := config.Dump()
+		assert.Nil(t, err)
+
+		config, directive := getServerBlockDirective(t, "example2.com", "test")
+		assert.Equal(t, "test_value", directive.GetFirstValue())
+	})
+}
+
+func TestDeleteDirectiveByNameInServerBlock(t *testing.T) {
+	testWithConfigFileRollback(t, example2ConfigFilePath, func(t *testing.T) {
+		config, serverBlock := getServerBlock(t, "example2.com")
+		serverBlock.DeleteDirectiveByName("listen")
+		err := config.Dump()
+		assert.Nil(t, err)
+
+		_, serverBlock = getServerBlock(t, "example2.com")
+		directives := serverBlock.FindDirectives("listen")
+		assert.Empty(t, directives)
+	})
+}
+
+func getServerBlockDirective(t *testing.T, serverName, directiveName string) (*Config, Directive) {
+	config, serverBlock := getServerBlock(t, serverName)
+	directives := serverBlock.FindDirectives(directiveName)
+	assert.Len(t, directives, 1)
+
+	return config, directives[0]
+}
+
+func getServerBlock(t *testing.T, serverName string) (*Config, ServerBlock) {
+	config := parseConfig(t)
+
+	serverBlocks := config.FindServerBlocksByServerName(serverName)
+	assert.Len(t, serverBlocks, 1)
+
+	serverBlock := serverBlocks[0]
+
+	return config, serverBlock
+}
