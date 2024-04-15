@@ -58,8 +58,8 @@ func (c *ConfigFile) DeleteDirectiveByName(directiveName string) {
 	deleteDirectiveByName(c.configFile, directiveName)
 }
 
-func (c *ConfigFile) AddDirective(name string, values []string, begining bool) {
-	addDirective(c.configFile, name, values, begining)
+func (c *ConfigFile) AddDirective(directive Directive, begining bool) {
+	addDirective(c.configFile, directive, begining)
 }
 
 func (c *ConfigFile) Dump() error {

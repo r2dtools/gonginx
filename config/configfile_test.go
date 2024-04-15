@@ -29,7 +29,8 @@ func TestDeleteDirectiveByNameInConfigFile(t *testing.T) {
 func TestAddDirectiveInConfigFile(t *testing.T) {
 	testWithConfigFileRollback(t, example2ConfigFilePath, func(t *testing.T) {
 		configFile := getConfigFile(t, example2ConfigFileName)
-		configFile.AddDirective("test", []string{"test_value"}, true)
+		directive := NewDirective("test", []string{"test_value"})
+		configFile.AddDirective(directive, true)
 		err := configFile.Dump()
 		assert.Nil(t, err)
 

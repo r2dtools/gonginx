@@ -116,6 +116,16 @@ func (b *BlockDirective) GetParametersExpressions() []string {
 	return getExpressions(b.Parameters)
 }
 
+func (b *BlockDirective) SetParameters(parameters []string) {
+	values := []*Value{}
+
+	for _, parameter := range parameters {
+		values = append(values, &Value{Expression: parameter})
+	}
+
+	b.Parameters = values
+}
+
 func (b *BlockDirective) SetEntries(entries []*Entry) {
 	if b.Content == nil {
 		b.Content = &BlockContent{}

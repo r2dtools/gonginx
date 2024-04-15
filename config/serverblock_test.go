@@ -17,12 +17,12 @@ func TestFindDirectivesInServerBlock(t *testing.T) {
 	assert.Len(t, directives, 1)
 
 	directive := directives[0]
-	assert.Equal(t, "ssl_certificate_key", directive.Name)
-	assert.ElementsMatch(t, directive.Values, []string{"/opt/webmng/test/certificate/example.com.key"})
+	assert.Equal(t, "ssl_certificate_key", directive.GetName())
+	assert.ElementsMatch(t, directive.GetValues(), []string{"/opt/webmng/test/certificate/example.com.key"})
 
 	directives = serverBlock.FindDirectives("listen")
 	assert.Len(t, directives, 4)
-	assert.ElementsMatch(t, directives[2].Values, []string{"[::]:443", "ssl", "ipv6only=on"})
+	assert.ElementsMatch(t, directives[2].GetValues(), []string{"[::]:443", "ssl", "ipv6only=on"})
 
 	locations := serverBlock.FindLocationBlocks()
 	assert.Len(t, locations, 1)
@@ -38,7 +38,7 @@ func TestServerBlock(t *testing.T) {
 	assert.Len(t, serverBlocks, 1)
 
 	block := serverBlocks[0]
-	assert.Equal(t, "server", block.Name)
+	assert.Equal(t, "server", block.GetName())
 	assert.ElementsMatch(t, block.GetServerNames(), []string{"example2.com", "www.example2.com"})
 	assert.Equal(t, true, block.HasSSL())
 	assert.Equal(t, "/var/www/html", block.GetDocumentRoot())
@@ -50,11 +50,12 @@ func TestServerBlock(t *testing.T) {
 func TestAddDirectiveInServerBlock(t *testing.T) {
 	testWithConfigFileRollback(t, example2ConfigFilePath, func(t *testing.T) {
 		config, serverBlock := getServerBlock(t, "example2.com")
-		serverBlock.AddDirective("test", []string{"test_value"}, true)
+		directive := NewDirective("test", []string{"test_value"})
+		serverBlock.AddDirective(directive, true)
 		err := config.Dump()
 		assert.Nil(t, err)
 
-		config, directive := getServerBlockDirective(t, "example2.com", "test")
+		config, directive = getServerBlockDirective(t, "example2.com", "test")
 		assert.Equal(t, "test_value", directive.GetFirstValue())
 	})
 }
@@ -85,7 +86,7 @@ func TestDeleteDirectiveInServerBlock(t *testing.T) {
 		_, serverBlock = getServerBlock(t, "example2.com")
 		directives = serverBlock.FindDirectives("listen")
 		assert.Len(t, directives, 3)
-		assert.Equal(t, []string{"443", "ssl"}, directives[2].Values)
+		assert.Equal(t, []string{"443", "ssl"}, directives[2].GetValues())
 	})
 }
 

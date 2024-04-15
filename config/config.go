@@ -332,8 +332,6 @@ func (c *Config) findDirectivesRecursively(
 
 			directives = append(directives, Directive{
 				rawDirective: directive,
-				Name:         directive.Identifier,
-				Values:       directive.GetExpressions(),
 				Comments:     comments,
 			})
 
@@ -404,11 +402,9 @@ func (c *Config) findBlocksRecursively(
 			}
 
 			blocks = append(blocks, Block{
-				config:     c,
-				rawBlock:   blockDirective,
-				Name:       blockDirective.Identifier,
-				Parameters: blockDirective.GetParametersExpressions(),
-				Comments:   comments,
+				config:   c,
+				rawBlock: blockDirective,
+				Comments: comments,
 			})
 		} else {
 			// blocks can be nested

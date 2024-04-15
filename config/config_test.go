@@ -17,8 +17,8 @@ func TestFindHttpBlocks(t *testing.T) {
 	assert.Len(t, httpBlocks, 1)
 	httpBlock := httpBlocks[0]
 
-	assert.Equal(t, "http", httpBlock.Name)
-	assert.Empty(t, httpBlock.Parameters)
+	assert.Equal(t, "http", httpBlock.GetName())
+	assert.Empty(t, httpBlock.GetParameters())
 	assert.Len(t, httpBlock.Comments, 2)
 
 	commentBefore := httpBlock.Comments[0]
@@ -63,7 +63,7 @@ func TestFindDirectives(t *testing.T) {
 
 	directives := config.FindDirectives("server_name")
 	assert.Len(t, directives, 8)
-	assert.Equal(t, directives[0].Values, []string{"example.com"})
+	assert.Equal(t, directives[0].GetValues(), []string{"example.com"})
 }
 
 func TestDump(t *testing.T) {

@@ -18,7 +18,7 @@ func deleteDirectiveByName(c entryContainer, directiveName string) {
 
 func deleteDirective(c entryContainer, directive Directive) {
 	deleteDirectiveInEntityContainer(c, func(rawDirective *rawparser.Directive) bool {
-		return rawDirective.Identifier == directive.Name && slices.Equal(rawDirective.GetExpressions(), directive.Values)
+		return rawDirective.Identifier == directive.GetName() && slices.Equal(rawDirective.GetExpressions(), directive.GetValues())
 	})
 }
 
@@ -47,20 +47,10 @@ func deleteDirectiveInEntityContainer(c entryContainer, callback func(directive 
 	setEntries(c, dEntries)
 }
 
-func addDirective(c entryContainer, name string, values []string, begining bool) {
+func addDirective(c entryContainer, directive Directive, begining bool) {
 	entries := c.GetEntries()
-	directiveValues := []*rawparser.Value{}
-
-	for _, value := range values {
-		directiveValues = append(directiveValues, &rawparser.Value{Expression: value})
-	}
-
-	directive := &rawparser.Directive{
-		Identifier: name,
-		Values:     directiveValues,
-	}
 	entry := &rawparser.Entry{
-		Directive:   directive,
+		Directive:   directive.rawDirective,
 		EndNewLines: []string{"\n"},
 	}
 

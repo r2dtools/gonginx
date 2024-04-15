@@ -13,7 +13,7 @@ func TestDirective(t *testing.T) {
 	assert.Len(t, directives, 5)
 
 	directive := directives[3]
-	assert.Equal(t, "ssl_certificate", directive.Name)
+	assert.Equal(t, "ssl_certificate", directive.GetName())
 	assert.Equal(t, "/opt/webmng/test/certificate/example.com.crt", directive.GetFirstValue())
 
 	comments := directive.Comments

@@ -5,7 +5,7 @@ type LocationBlock struct {
 }
 
 func (l *LocationBlock) GetModifier() string {
-	parameters := l.Parameters
+	parameters := l.GetParameters()
 
 	if len(parameters) > 1 {
 		return parameters[0]
@@ -14,8 +14,20 @@ func (l *LocationBlock) GetModifier() string {
 	return ""
 }
 
+func (l *LocationBlock) SetModifier(modifier string) {
+	parameters := l.GetParameters()
+
+	if len(parameters) == 0 {
+		parameters = []string{modifier}
+	} else {
+		parameters[0] = modifier
+	}
+
+	l.SetParameters(parameters)
+}
+
 func (l *LocationBlock) GetLocationMatch() string {
-	parameters := l.Parameters
+	parameters := l.GetParameters()
 
 	if len(parameters) > 1 {
 		return parameters[1]
@@ -26,4 +38,16 @@ func (l *LocationBlock) GetLocationMatch() string {
 	}
 
 	return ""
+}
+
+func (l *LocationBlock) SetLocationMatch(match string) {
+	parameters := l.GetParameters()
+
+	if len(parameters) > 1 {
+		parameters[1] = match
+	} else {
+		parameters[0] = match
+	}
+
+	l.SetParameters(parameters)
 }

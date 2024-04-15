@@ -13,14 +13,14 @@ func TestUpstreamBlocks(t *testing.T) {
 	assert.Len(t, blocks, 1)
 
 	block := blocks[0]
-	assert.Equal(t, "upstream", block.Name)
+	assert.Equal(t, "upstream", block.GetName())
 	assert.Equal(t, "dynamic", block.GetUpstreamName())
 
 	servers := block.GetServers()
 	assert.Len(t, servers, 7)
 
 	server := servers[1]
-	assert.Equal(t, "server", server.Name)
-	assert.Equal(t, "backend2.example.com:8080", server.Address)
-	assert.ElementsMatch(t, server.Flags, []string{"fail_timeout=5s", "slow_start=30s"})
+	assert.Equal(t, "server", server.GetName())
+	assert.Equal(t, "backend2.example.com:8080", server.GetAddress())
+	assert.ElementsMatch(t, server.GetFlags(), []string{"fail_timeout=5s", "slow_start=30s"})
 }

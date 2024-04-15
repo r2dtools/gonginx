@@ -7,11 +7,21 @@ import (
 )
 
 type Block struct {
-	config     *Config
-	rawBlock   *rawparser.BlockDirective
-	Name       string
-	Parameters []string
-	Comments   []Comment
+	config   *Config
+	rawBlock *rawparser.BlockDirective
+	Comments []Comment
+}
+
+func (b *Block) GetName() string {
+	return b.rawBlock.Identifier
+}
+
+func (b *Block) GetParameters() []string {
+	return b.rawBlock.GetParametersExpressions()
+}
+
+func (b *Block) SetParameters(parameters []string) {
+	b.rawBlock.SetParameters(parameters)
 }
 
 func (b *Block) FindDirectives(directiveName string) []Directive {
@@ -32,8 +42,8 @@ func (b *Block) FindBlocks(blockName string) []Block {
 	return blocks
 }
 
-func (b *Block) AddDirective(name string, values []string, begining bool) {
-	addDirective(b.rawBlock, name, values, begining)
+func (b *Block) AddDirective(directive Directive, begining bool) {
+	addDirective(b.rawBlock, directive, begining)
 }
 
 func (b *Block) DeleteDirective(directive Directive) {

@@ -17,7 +17,7 @@ func (s *ServerBlock) GetServerNames() []string {
 		return serverNames
 	}
 
-	for _, value := range directives[0].Values {
+	for _, value := range directives[0].GetValues() {
 		serverNames = append(serverNames, strings.TrimSpace(value))
 	}
 
@@ -54,7 +54,7 @@ func (s *ServerBlock) GetListens() []Listen {
 		hostPort := listenDirective.GetFirstValue()
 		ssl := serverSsl
 
-		for _, value := range listenDirective.Values {
+		for _, value := range listenDirective.GetValues() {
 			// check listen directive for "ssl" value
 			// listen 443 ssl http2;
 			if !ssl && value == "ssl" {
