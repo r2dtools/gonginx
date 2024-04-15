@@ -43,3 +43,11 @@ func (b *HttpBlock) AddServerBlock() ServerBlock {
 		Block: block,
 	}
 }
+
+func (b *HttpBlock) DeleteServerBlock(serverBlock ServerBlock) {
+	deleteBlock(b.rawBlock, serverBlock.Block)
+}
+
+func (b *HttpBlock) DeleteUpstreamBlock(upsstreamBlock UpstreamBlock) {
+	deleteBlock(b.rawBlock, upsstreamBlock.Block)
+}

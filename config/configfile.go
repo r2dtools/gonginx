@@ -70,6 +70,18 @@ func (c *ConfigFile) AddHttpBlock() HttpBlock {
 	}
 }
 
+func (c *ConfigFile) DeleteHttpBlock(httpBlock HttpBlock) {
+	deleteBlock(c.configFile, httpBlock.Block)
+}
+
+func (c *ConfigFile) DeleteServerBlock(serverBlock ServerBlock) {
+	deleteBlock(c.configFile, serverBlock.Block)
+}
+
+func (c *ConfigFile) DeleteUpstreamBlock(upstreamBlock ServerBlock) {
+	deleteBlock(c.configFile, upstreamBlock.Block)
+}
+
 func (c *ConfigFile) addBlock(name string, parameters []string) Block {
 	return newBlock(c.configFile, c.config, name, parameters)
 }
@@ -81,7 +93,7 @@ func (c *ConfigFile) Dump() error {
 		return err
 	}
 
-	file, err := os.OpenFile(c.FilePath, os.O_WRONLY|os.O_TRUNC, 0666)
+	file, err := os.OpenFile(c.FilePath, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0666)
 
 	if err != nil {
 		return err

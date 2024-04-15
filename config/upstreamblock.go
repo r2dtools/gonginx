@@ -50,3 +50,7 @@ func (b *UpstreamBlock) SetServer(upstreamServers []UpstreamServer) {
 		b.AddServer(upstreamServer)
 	}
 }
+
+func (b *UpstreamBlock) DeleteServer(upstreamServer UpstreamServer) {
+	b.DeleteDirective(upstreamServer.Directive)
+}

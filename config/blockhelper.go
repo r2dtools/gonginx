@@ -109,7 +109,63 @@ func newBlock(container entryContainer, config *Config, name string, parameters 
 		BlockDirective: rawBlock,
 		EndNewLines:    []string{"\n"},
 	})
-	container.SetEntries(entries)
+
+	setEntries(container, entries)
 
 	return block
+}
+
+func deleteBlockByName(c entryContainer, name string) {
+	deleteBlockEntityContainer(c, func(block *rawparser.BlockDirective) bool {
+		return block.Identifier == name
+	})
+}
+
+func deleteBlock(c entryContainer, block Block) {
+	deleteBlockEntityContainer(c, func(rawBlock *rawparser.BlockDirective) bool {
+		return block.rawBlock == rawBlock
+	})
+}
+
+func deleteBlockEntityContainer(c entryContainer, callback func(block *rawparser.BlockDirective) bool) {
+	entries := c.GetEntries()
+	dEntries := []*rawparser.Entry{}
+	indexesToDelete := []int{}
+
+	for index, entry := range entries {
+		if entry.BlockDirective == nil {
+			continue
+		}
+
+		if callback(entry.BlockDirective) {
+			indexesToDelete = append(indexesToDelete, index)
+			indexesToDelete = append(indexesToDelete, findEntryCommentIndexesToDelete(entries, index)...)
+		}
+	}
+
+	for index, entry := range entries {
+		if !slices.Contains(indexesToDelete, index) {
+			dEntries = append(dEntries, entry)
+		}
+	}
+
+	setEntries(c, dEntries)
+}
+
+func addLocationBlock(b *Block, modifier, match string) LocationBlock {
+	parameters := []string{}
+
+	if modifier != "" {
+		parameters = append(parameters, modifier)
+	}
+
+	if match != "" {
+		parameters = append(parameters, match)
+	}
+
+	block := b.addBlock("location", parameters)
+
+	return LocationBlock{
+		Block: block,
+	}
 }

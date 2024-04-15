@@ -23,7 +23,6 @@ func TestDeleteDirectiveByNameInConfigFile(t *testing.T) {
 		directives := serverBlock.FindDirectives("listen")
 		assert.Empty(t, directives)
 	})
-
 }
 
 func TestAddDirectiveInConfigFile(t *testing.T) {
@@ -38,6 +37,23 @@ func TestAddDirectiveInConfigFile(t *testing.T) {
 		directives := configFile.FindDirectives("test")
 		assert.Len(t, directives, 1)
 		assert.Equal(t, "test_value", directives[0].GetFirstValue())
+	})
+}
+
+func TestDeleteBlock(t *testing.T) {
+	testWithConfigFileRollback(t, example2ConfigFilePath, func(t *testing.T) {
+		configFile := getConfigFile(t, example2ConfigFileName)
+		serverBlocks := configFile.FindServerBlocksByServerName("example2.com")
+		assert.Len(t, serverBlocks, 1)
+		serverBlock := serverBlocks[0]
+
+		configFile.DeleteServerBlock(serverBlock)
+		err := configFile.Dump()
+		assert.Nil(t, err)
+
+		configFile = getConfigFile(t, example2ConfigFileName)
+		serverBlocks = configFile.FindServerBlocksByServerName("example2.com")
+		assert.Empty(t, serverBlocks)
 	})
 }
 

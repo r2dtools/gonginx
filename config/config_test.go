@@ -73,6 +73,36 @@ func TestDump(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+func TestAddConfigFile(t *testing.T) {
+	configFilePath := "../test/nginx/sites-enabled/example3.com.conf"
+
+	config := parseConfig(t)
+	configFile, err := config.AddConfigFile(configFilePath)
+	assert.Nil(t, err)
+
+	directive := NewDirective("directive", []string{"test"})
+	configFile.AddDirective(directive, true)
+
+	httpBlock := configFile.AddHttpBlock()
+	directive = NewDirective("http_directive", []string{"http", "directive"})
+	httpBlock.AddDirective(directive, false)
+
+	err = configFile.Dump()
+	assert.Nil(t, err)
+	defer os.Remove(configFilePath)
+
+	config = parseConfig(t)
+	configFile = config.GetConfigFile("example3.com.conf")
+	assert.NotNil(t, configFile)
+	directives := configFile.FindDirectives("directive")
+	assert.Len(t, directives, 1)
+	assert.Equal(t, "directive", directives[0].GetName())
+	assert.Equal(t, []string{"test"}, directives[0].GetValues())
+
+	httpBlocks := configFile.FindHttpBlocks()
+	assert.Len(t, httpBlocks, 1)
+}
+
 func parseConfig(t *testing.T) *Config {
 	config, err := GetConfig("../test/nginx", "", false)
 	assert.Nilf(t, err, "could not create config: %v", err)
