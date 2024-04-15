@@ -130,3 +130,21 @@ func (s *ServerBlock) HasSSL() bool {
 func (s *ServerBlock) FindLocationBlocks() []LocationBlock {
 	return findLocationBlocks(&s.Block)
 }
+
+func (s *ServerBlock) AddLocationBlock(modifier, match string) LocationBlock {
+	parameters := []string{}
+
+	if modifier != "" {
+		parameters = append(parameters, modifier)
+	}
+
+	if match != "" {
+		parameters = append(parameters, match)
+	}
+
+	block := s.addBlock("location", parameters)
+
+	return LocationBlock{
+		Block: block,
+	}
+}

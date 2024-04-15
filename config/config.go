@@ -141,6 +141,30 @@ func (c *Config) Dump() error {
 	return nil
 }
 
+func (c *Config) AddConfigFile(filePath string) (*ConfigFile, error) {
+	var err error
+
+	if _, err = os.Stat(filePath); errors.Is(err, os.ErrNotExist) {
+		_, err = os.Create(filePath)
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	configFile := ConfigFile{
+		FilePath:   filePath,
+		configFile: &rawparser.Config{},
+		config:     c,
+	}
+
+	return &configFile, nil
+}
+
 func (c *Config) findDirectivesRecursivelyInLoop(
 	directiveName string,
 	entries []*rawparser.Entry,

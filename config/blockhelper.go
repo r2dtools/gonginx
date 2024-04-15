@@ -1,6 +1,9 @@
 package config
 
-import "golang.org/x/exp/slices"
+import (
+	"github.com/r2dtools/gonginx/internal/rawparser"
+	"golang.org/x/exp/slices"
+)
 
 type blockFinder interface {
 	FindBlocks(blockName string) []Block
@@ -86,4 +89,27 @@ func findUpstreamBlocksByName(finder upstreamBlockFinder, upstreamName string) [
 	}
 
 	return upstreamBlocks
+}
+
+func newBlock(container entryContainer, config *Config, name string, parameters []string) Block {
+	rawBlock := &rawparser.BlockDirective{
+		Identifier: name,
+		Content:    &rawparser.BlockContent{},
+	}
+	rawBlock.SetParameters(parameters)
+
+	block := Block{
+		config:   config,
+		rawBlock: rawBlock,
+	}
+
+	entries := container.GetEntries()
+	entries = append(entries, &rawparser.Entry{
+		StartNewLines:  []string{"\n"},
+		BlockDirective: rawBlock,
+		EndNewLines:    []string{"\n"},
+	})
+	container.SetEntries(entries)
+
+	return block
 }

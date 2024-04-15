@@ -62,6 +62,18 @@ func (c *ConfigFile) AddDirective(directive Directive, begining bool) {
 	addDirective(c.configFile, directive, begining)
 }
 
+func (c *ConfigFile) AddHttpBlock() HttpBlock {
+	block := c.addBlock("http", nil)
+
+	return HttpBlock{
+		Block: block,
+	}
+}
+
+func (c *ConfigFile) addBlock(name string, parameters []string) Block {
+	return newBlock(c.configFile, c.config, name, parameters)
+}
+
 func (c *ConfigFile) Dump() error {
 	content, err := c.config.rawDumper.Dump(c.configFile)
 

@@ -53,3 +53,7 @@ func (b *Block) DeleteDirective(directive Directive) {
 func (b *Block) DeleteDirectiveByName(directiveName string) {
 	deleteDirectiveByName(b.rawBlock, directiveName)
 }
+
+func (b *Block) addBlock(name string, parameters []string) Block {
+	return newBlock(b.rawBlock, b.config, name, parameters)
+}
