@@ -43,7 +43,7 @@ func (b *UpstreamBlock) AddServer(upstreamServer UpstreamServer) {
 	b.AddDirective(upstreamServer.Directive, false)
 }
 
-func (b *UpstreamBlock) SetServer(upstreamServers []UpstreamServer) {
+func (b *UpstreamBlock) SetServers(upstreamServers []UpstreamServer) {
 	b.DeleteDirectiveByName("server")
 
 	for _, upstreamServer := range upstreamServers {

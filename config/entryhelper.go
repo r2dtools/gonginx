@@ -34,7 +34,7 @@ func findEntryCommentIndexesToDelete(entries []*rawparser.Entry, index int) []in
 		indexesToDelete = append(indexesToDelete, i)
 	}
 
-	if index >= len(entries) {
+	if index >= len(entries)-1 {
 		return indexesToDelete
 	}
 

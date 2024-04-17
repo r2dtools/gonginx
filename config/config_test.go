@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var nginxConfigFilePath = "../test/nginx/nginx.conf"
 var example2ConfigFilePath = "../test/nginx/sites-enabled/example2.com.conf"
 var example2ConfigFileName = "example2.com.conf"
 
