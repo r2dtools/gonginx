@@ -20,7 +20,7 @@ func (l *LocationBlock) SetModifier(modifier string) {
 	if len(parameters) == 0 {
 		parameters = []string{modifier}
 	} else {
-		parameters[0] = modifier
+		parameters = append([]string{modifier}, parameters...)
 	}
 
 	l.SetParameters(parameters)
