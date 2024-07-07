@@ -44,6 +44,7 @@ func deleteDirectiveInEntityContainer(c entryContainer, callback func(directive 
 
 func addDirective(c entryContainer, directive Directive, begining bool) {
 	entries := c.GetEntries()
+	directive.setContainer(c)
 	entry := &rawparser.Entry{
 		Directive:   directive.rawDirective,
 		EndNewLines: []string{"\n"},

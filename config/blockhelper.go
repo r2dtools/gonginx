@@ -99,8 +99,9 @@ func newBlock(container entryContainer, config *Config, name string, parameters 
 	rawBlock.SetParameters(parameters)
 
 	block := Block{
-		config:   config,
-		rawBlock: rawBlock,
+		config:    config,
+		container: container,
+		rawBlock:  rawBlock,
 	}
 
 	entries := container.GetEntries()

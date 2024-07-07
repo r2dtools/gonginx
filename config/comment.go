@@ -10,7 +10,19 @@ const (
 )
 
 type Comment struct {
-	rawCommet *rawparser.Comment
-	Content   string
-	Position  CommentPosition
+	rawComment *rawparser.Comment
+	Content    string
+	Position   CommentPosition
+}
+
+func newComment(content string) Comment {
+	rawComment := &rawparser.Comment{
+		Value: "# " + content,
+	}
+
+	return Comment{
+		rawComment: rawComment,
+		Content:    content,
+		Position:   CommentPosition(Before),
+	}
 }

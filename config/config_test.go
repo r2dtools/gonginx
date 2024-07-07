@@ -9,7 +9,9 @@ import (
 
 var nginxConfigFilePath = "../test/nginx/nginx.conf"
 var example2ConfigFilePath = "../test/nginx/sites-enabled/example2.com.conf"
+var exampleConfigFilePath = "../test/nginx/sites-enabled/example.com.conf"
 var example2ConfigFileName = "example2.com.conf"
+var exampleConfigFileName = "example.com.conf"
 
 func TestFindHttpBlocks(t *testing.T) {
 	config := parseConfig(t)
@@ -20,13 +22,6 @@ func TestFindHttpBlocks(t *testing.T) {
 
 	assert.Equal(t, "http", httpBlock.GetName())
 	assert.Empty(t, httpBlock.GetParameters())
-	assert.Len(t, httpBlock.Comments, 2)
-
-	commentBefore := httpBlock.Comments[0]
-	assert.Equal(t, "http block", commentBefore.Content)
-
-	inlineComment := httpBlock.Comments[1]
-	assert.Equal(t, "http block inline comment", inlineComment.Content)
 }
 
 func TestFindServerBlocks(t *testing.T) {

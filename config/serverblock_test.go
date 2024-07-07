@@ -26,9 +26,6 @@ func TestFindDirectivesInServerBlock(t *testing.T) {
 
 	locations := serverBlock.FindLocationBlocks()
 	assert.Len(t, locations, 1)
-
-	commments := serverBlock.Comments
-	assert.Len(t, commments, 19)
 }
 
 func TestServerBlock(t *testing.T) {
@@ -88,6 +85,21 @@ func TestDeleteDirectiveInServerBlock(t *testing.T) {
 		assert.Len(t, directives, 3)
 		assert.Equal(t, []string{"443", "ssl"}, directives[2].GetValues())
 	})
+}
+
+func TestFindServerBlockComments(t *testing.T) {
+	configFile := getConfigFile(t, example2ConfigFileName)
+	serverBlocks := configFile.FindServerBlocksByServerName("example2.com")
+	assert.Len(t, serverBlocks, 1)
+
+	serverBlock := serverBlocks[0]
+
+	comments := serverBlock.FindComments()
+	assert.Len(t, comments, 20)
+
+	inlineComment := comments[len(comments)-1]
+	assert.Equal(t, "inline comment", inlineComment.Content)
+	assert.Equal(t, "updated by the nginx packaging team.", comments[9].Content)
 }
 
 func getServerBlockDirective(t *testing.T, serverName, directiveName string) (*Config, Directive) {

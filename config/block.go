@@ -1,15 +1,15 @@
 package config
 
 import (
-	"container/list"
+	"strings"
 
 	"github.com/r2dtools/gonginx/internal/rawparser"
 )
 
 type Block struct {
-	config   *Config
-	rawBlock *rawparser.BlockDirective
-	Comments []Comment
+	config    *Config
+	container entryContainer
+	rawBlock  *rawparser.BlockDirective
 }
 
 func (b *Block) GetName() string {
@@ -25,18 +25,14 @@ func (b *Block) SetParameters(parameters []string) {
 }
 
 func (b *Block) FindDirectives(directiveName string) []Directive {
-	prevEntries := list.New()
-
-	return b.config.findDirectivesRecursivelyInLoop(directiveName, b.rawBlock.GetEntries(), prevEntries)
+	return b.config.findDirectivesRecursivelyInLoop(directiveName, b.rawBlock)
 }
 
 func (b *Block) FindBlocks(blockName string) []Block {
 	var blocks []Block
 
-	prevEntries := list.New()
-
 	for _, entry := range b.rawBlock.GetEntries() {
-		blocks = append(blocks, b.config.findBlocksRecursively(blockName, entry, prevEntries)...)
+		blocks = append(blocks, b.config.findBlocksRecursively(blockName, b.rawBlock, entry)...)
 	}
 
 	return blocks
@@ -54,6 +50,80 @@ func (b *Block) DeleteDirectiveByName(directiveName string) {
 	deleteDirectiveByName(b.rawBlock, directiveName)
 }
 
+func (b *Block) FindComments() []Comment {
+	entries := b.container.GetEntries()
+	comments := []Comment{}
+
+	var (
+		index int
+		entry *rawparser.Entry
+	)
+
+	for index, entry = range entries {
+		if entry.BlockDirective == nil {
+			continue
+		}
+
+		if entry.BlockDirective == b.rawBlock {
+			break
+		}
+	}
+
+	comment := b.findInlineComment(entry.BlockDirective)
+
+	if comment != nil {
+		comments = append(comments, *comment)
+	}
+
+	for prevIndex := index - 1; prevIndex >= 0; prevIndex-- {
+		entry := entries[prevIndex]
+
+		if entry.Comment == nil {
+			break
+		}
+
+		comment := b.createComment(entry.Comment, CommentPosition(Before))
+		comments = append([]Comment{comment}, comments...)
+
+	}
+
+	return comments
+}
+
+func (b *Block) findInlineComment(blockDirective *rawparser.BlockDirective) *Comment {
+	if blockDirective == nil {
+		return nil
+	}
+
+	content := blockDirective.Content
+
+	if content == nil || len(content.Entries) == 0 {
+		return nil
+	}
+
+	firstEntry := content.Entries[0]
+
+	if firstEntry.Comment != nil {
+		comment := b.createComment(firstEntry.Comment, CommentPosition(Inline))
+
+		return &comment
+	}
+
+	return nil
+}
+
+func (b *Block) createComment(rawComment *rawparser.Comment, position CommentPosition) Comment {
+	return Comment{
+		rawComment: rawComment,
+		Content:    strings.Trim(rawComment.Value, "\n# "),
+		Position:   position,
+	}
+}
+
 func (b *Block) addBlock(name string, parameters []string) Block {
 	return newBlock(b.rawBlock, b.config, name, parameters)
+}
+
+func (b *Block) setContainer(container entryContainer) {
+	b.container = container
 }

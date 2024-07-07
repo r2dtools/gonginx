@@ -1,7 +1,6 @@
 package config
 
 import (
-	"container/list"
 	"errors"
 	"fmt"
 	"os"
@@ -78,10 +77,9 @@ func (c *Config) FindDirectives(directiveName string) []Directive {
 			continue
 		}
 
-		prevEntries := list.New()
 		directives = append(
 			directives,
-			c.findDirectivesRecursivelyInLoop(directiveName, tree.Entries, prevEntries)...,
+			c.findDirectivesRecursivelyInLoop(directiveName, tree)...,
 		)
 	}
 
@@ -101,10 +99,8 @@ func (c *Config) FindBlocks(blockName string) []Block {
 			continue
 		}
 
-		entryList := list.New()
-
 		for _, entry := range tree.Entries {
-			blocks = append(blocks, c.findBlocksRecursively(blockName, entry, entryList)...)
+			blocks = append(blocks, c.findBlocksRecursively(blockName, tree, entry)...)
 		}
 	}
 
@@ -157,21 +153,14 @@ func (c *Config) AddConfigFile(filePath string) (*ConfigFile, error) {
 
 func (c *Config) findDirectivesRecursivelyInLoop(
 	directiveName string,
-	entries []*rawparser.Entry,
-	prevEntries *list.List,
+	container entryContainer,
 ) []Directive {
 	var directives []Directive
+	entries := container.GetEntries()
 	entriesCount := len(entries)
 
 	for i := 0; i < entriesCount; i++ {
-		var nextEntry *rawparser.Entry
-		entry := entries[i]
-
-		if i < entriesCount-1 {
-			nextEntry = entries[i+1]
-		}
-
-		directives = append(directives, c.findDirectivesRecursively(directiveName, entry, nextEntry, prevEntries)...)
+		directives = append(directives, c.findDirectivesRecursively(directiveName, container, entries[i])...)
 	}
 
 	return directives
@@ -301,17 +290,12 @@ func (c *Config) getAbsPath(path string) string {
 
 func (c *Config) findDirectivesRecursively(
 	directiveName string,
+	container entryContainer,
 	entry *rawparser.Entry,
-	nextEntry *rawparser.Entry,
-	prevEnties *list.List,
 ) []Directive {
 	var directives []Directive
 	directive := entry.Directive
 	blockDirective := entry.BlockDirective
-
-	if prevEnties == nil {
-		prevEnties = list.New()
-	}
 
 	if directive != nil {
 		identifier := directive.Identifier
@@ -330,23 +314,16 @@ func (c *Config) findDirectivesRecursively(
 				if ok {
 					directives = append(
 						directives,
-						c.findDirectivesRecursivelyInLoop(directiveName, includeConfig.Entries, prevEnties)...,
+						c.findDirectivesRecursivelyInLoop(directiveName, includeConfig)...,
 					)
 				}
 			}
 		}
 
 		if identifier == directiveName {
-			comments := c.findNearesComments(prevEnties)
-			inlineComment := c.findDirectiveInlineComment(entry, nextEntry)
-
-			if inlineComment != nil {
-				comments = append(comments, *inlineComment)
-			}
-
 			directives = append(directives, Directive{
 				rawDirective: directive,
-				Comments:     comments,
+				container:    container,
 			})
 
 			return directives
@@ -356,29 +333,23 @@ func (c *Config) findDirectivesRecursively(
 	if blockDirective != nil {
 		directives = append(
 			directives,
-			c.findDirectivesRecursivelyInLoop(directiveName, blockDirective.GetEntries(), prevEnties)...,
+			c.findDirectivesRecursivelyInLoop(directiveName, blockDirective)...,
 		)
 
 		return directives
 	}
-
-	prevEnties.PushBack(entry)
 
 	return directives
 }
 
 func (c *Config) findBlocksRecursively(
 	blockName string,
+	container entryContainer,
 	entry *rawparser.Entry,
-	entryList *list.List,
 ) []Block {
 	var blocks []Block
 	directive := entry.Directive
 	blockDirective := entry.BlockDirective
-
-	if entryList == nil {
-		entryList = list.New()
-	}
 
 	if directive != nil && directive.Identifier == "include" {
 		include := directive.GetFirstValueStr()
@@ -395,7 +366,7 @@ func (c *Config) findBlocksRecursively(
 				for _, entry := range includeConfig.Entries {
 					blocks = append(
 						blocks,
-						c.findBlocksRecursively(blockName, entry, nil)...,
+						c.findBlocksRecursively(blockName, includeConfig, entry)...,
 					)
 				}
 			}
@@ -408,92 +379,25 @@ func (c *Config) findBlocksRecursively(
 		identifier := blockDirective.Identifier
 
 		if identifier == blockName {
-			comments := c.findNearesComments(entryList)
-			inlineComment := c.findBlockInlineComment(blockDirective.Content)
-
-			if inlineComment != nil {
-				comments = append(comments, *inlineComment)
-			}
-
 			blocks = append(blocks, Block{
-				config:   c,
-				rawBlock: blockDirective,
-				Comments: comments,
+				config:    c,
+				container: container,
+				rawBlock:  blockDirective,
 			})
 		} else {
 			// blocks can be nested
 			for _, httpBlockEntry := range blockDirective.GetEntries() {
 				blocks = append(
 					blocks,
-					c.findBlocksRecursively(blockName, httpBlockEntry, entryList)...,
+					c.findBlocksRecursively(blockName, blockDirective, httpBlockEntry)...,
 				)
 			}
-
-			entryList.PushBack(entry)
 		}
 
 		return blocks
 	}
 
-	entryList.PushBack(entry)
-
 	return blocks
-}
-
-func (c *Config) findBlockInlineComment(content *rawparser.BlockContent) *Comment {
-	if content == nil || len(content.Entries) == 0 {
-		return nil
-	}
-
-	firstEntry := content.Entries[0]
-
-	if firstEntry.Comment != nil {
-		comment := c.createComment(firstEntry.Comment, CommentPosition(Inline))
-
-		return &comment
-	}
-
-	return nil
-}
-
-func (c *Config) findDirectiveInlineComment(entry, nextEntry *rawparser.Entry) *Comment {
-	if nextEntry == nil || nextEntry.Comment == nil {
-		return nil
-	}
-
-	if len(entry.EndNewLines) != 0 || len(nextEntry.StartNewLines) != 0 {
-		return nil
-	}
-
-	comment := c.createComment(nextEntry.Comment, CommentPosition(Inline))
-
-	return &comment
-}
-
-func (c *Config) findNearesComments(entryList *list.List) []Comment {
-	var commets []Comment
-
-	for element := entryList.Back(); element != nil; element = element.Prev() {
-		entry := element.Value.(*rawparser.Entry)
-
-		if entry.Comment == nil {
-			break
-		}
-
-		comment := c.createComment(entry.Comment, CommentPosition(Before))
-		commets = append([]Comment{comment}, commets...)
-
-	}
-
-	return commets
-}
-
-func (c *Config) createComment(rawComment *rawparser.Comment, position CommentPosition) Comment {
-	return Comment{
-		rawCommet: rawComment,
-		Content:   strings.Trim(rawComment.Value, "\n# "),
-		Position:  position,
-	}
 }
 
 func GetConfig(serverRootPath, configFilePath string, quiteMode bool) (*Config, error) {

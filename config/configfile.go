@@ -1,7 +1,6 @@
 package config
 
 import (
-	"container/list"
 	"os"
 
 	"github.com/r2dtools/gonginx/internal/rawparser"
@@ -14,17 +13,14 @@ type ConfigFile struct {
 }
 
 func (c *ConfigFile) FindDirectives(directiveName string) []Directive {
-	prevEntries := list.New()
-
-	return c.config.findDirectivesRecursivelyInLoop(directiveName, c.configFile.GetEntries(), prevEntries)
+	return c.config.findDirectivesRecursivelyInLoop(directiveName, c.configFile)
 }
 
 func (c *ConfigFile) FindBlocks(blockName string) []Block {
 	var blocks []Block
-	prevEntries := list.New()
 
 	for _, entry := range c.configFile.GetEntries() {
-		blocks = append(blocks, c.config.findBlocksRecursively(blockName, entry, prevEntries)...)
+		blocks = append(blocks, c.config.findBlocksRecursively(blockName, c.configFile, entry)...)
 	}
 
 	return blocks
