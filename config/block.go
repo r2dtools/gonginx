@@ -55,8 +55,8 @@ func (b *Block) FindComments() []Comment {
 	comments := []Comment{}
 
 	var (
-		index int
-		entry *rawparser.Entry
+		index         int
+		bEntry, entry *rawparser.Entry
 	)
 
 	for index, entry = range entries {
@@ -65,11 +65,16 @@ func (b *Block) FindComments() []Comment {
 		}
 
 		if entry.BlockDirective == b.rawBlock {
+			bEntry = entry
 			break
 		}
 	}
 
-	comment := b.findInlineComment(entry.BlockDirective)
+	if bEntry == nil {
+		return comments
+	}
+
+	comment := b.findInlineComment(bEntry.BlockDirective)
 
 	if comment != nil {
 		comments = append(comments, *comment)

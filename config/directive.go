@@ -65,6 +65,10 @@ func (d *Directive) FindComments() []Comment {
 		}
 	}
 
+	if dEntry == nil {
+		return comments
+	}
+
 	if index < len(entries)-1 {
 		nextEntry = entries[index+1]
 	}
