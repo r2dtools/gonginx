@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/r2dtools/gonginx/internal/rawparser"
+	"golang.org/x/exp/slices"
 )
 
 type Block struct {
@@ -93,6 +94,59 @@ func (b *Block) FindComments() []Comment {
 	}
 
 	return comments
+}
+
+func (b *Block) SetComments(comments []string) {
+	var (
+		index         int
+		bEntry, entry *rawparser.Entry
+	)
+	entries := b.container.GetEntries()
+
+	for index, entry = range entries {
+		if entry.BlockDirective == nil {
+			continue
+		}
+
+		if entry.BlockDirective == b.rawBlock {
+			bEntry = entry
+			break
+		}
+	}
+
+	if bEntry == nil {
+		return
+	}
+
+	pEntries := []*rawparser.Entry{}
+
+	for _, content := range comments {
+		commentEntry := rawparser.Entry{
+			Comment:     newComment(content).rawComment,
+			EndNewLines: []string{"\n"},
+		}
+		pEntries = append(pEntries, &commentEntry)
+	}
+
+	nIndex := index
+
+	for rIndex := index - 1; rIndex >= 0; rIndex-- {
+		rEntry := entries[rIndex]
+
+		if rEntry.Comment == nil {
+			break
+		}
+
+		nIndex = rIndex
+	}
+
+	if nIndex != index {
+		entries = slices.Delete(entries, nIndex, index)
+	}
+
+	entries = slices.Insert(entries, nIndex, pEntries...)
+
+	setEntries(b.container, entries)
 }
 
 func (b *Block) findInlineComment(blockDirective *rawparser.BlockDirective) *Comment {

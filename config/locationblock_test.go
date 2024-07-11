@@ -56,3 +56,29 @@ func TestLocationBlockSetLocationMattch(t *testing.T) {
 		assert.Equal(t, "~", locationBlock.GetModifier())
 	})
 }
+
+func TestSetLocationBlockComments(t *testing.T) {
+	testWithConfigFileRollback(t, exampleConfigFilePath, func(t *testing.T) {
+		configFile := getConfigFile(t, exampleConfigFileName)
+		serverBlocks := configFile.FindServerBlocksByServerName(".example.com")
+		assert.Len(t, serverBlocks, 2)
+
+		serverBlock := serverBlocks[1]
+		locationBlocks := serverBlock.FindLocationBlocks()
+		assert.Len(t, locationBlocks, 1)
+
+		locationBlock := locationBlocks[0]
+
+		comments := locationBlock.FindComments()
+		assert.Len(t, comments, 3)
+
+		locationBlock.SetComments([]string{"test comment1", "test comment2", "test comment3"})
+		err := configFile.Dump()
+		assert.Nil(t, err)
+
+		comments = locationBlock.FindComments()
+		assert.Len(t, comments, 4)
+
+		assert.Equal(t, "test comment1", comments[0].Content)
+	})
+}

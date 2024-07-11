@@ -46,6 +46,10 @@ func (c *ConfigFile) FindUpstreamBlocksByName(upstreamName string) []UpstreamBlo
 	return findUpstreamBlocksByName(c, upstreamName)
 }
 
+func (c *ConfigFile) FindLocationBlocks() []LocationBlock {
+	return findLocationBlocks(c)
+}
+
 func (c *ConfigFile) DeleteDirective(directive Directive) {
 	deleteDirective(c.configFile, directive)
 }

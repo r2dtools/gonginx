@@ -102,6 +102,24 @@ func TestFindServerBlockComments(t *testing.T) {
 	assert.Equal(t, "updated by the nginx packaging team.", comments[9].Content)
 }
 
+func TestSetServerBlockComments(t *testing.T) {
+	testWithConfigFileRollback(t, example2ConfigFilePath, func(t *testing.T) {
+		configFile := getConfigFile(t, example2ConfigFileName)
+		serverBlocks := configFile.FindServerBlocksByServerName("example2.com")
+		assert.Len(t, serverBlocks, 1)
+
+		serverBlock := serverBlocks[0]
+		serverBlock.SetComments([]string{"test comment1", "test comment2", "test comment3"})
+		err := configFile.Dump()
+		assert.Nil(t, err)
+
+		comments := serverBlock.FindComments()
+		assert.Len(t, comments, 4)
+
+		assert.Equal(t, "test comment1", comments[0].Content)
+	})
+}
+
 func getServerBlockDirective(t *testing.T, serverName, directiveName string) (*Config, Directive) {
 	config, serverBlock := getServerBlock(t, serverName)
 	directives := serverBlock.FindDirectives(directiveName)
