@@ -29,7 +29,7 @@ func (b *HttpBlock) FindLocationBlocks() []LocationBlock {
 }
 
 func (b *HttpBlock) AddUpstreamBlock(upstreamName string) UpstreamBlock {
-	block := b.addBlock("upstream", nil)
+	block := b.addBlock("upstream", []string{upstreamName})
 
 	return UpstreamBlock{
 		Block: block,
