@@ -1,12 +1,12 @@
 module github.com/r2dtools/gonginx
 
-go 1.20
+go 1.22
 
 require (
 	github.com/alecthomas/participle/v2 v2.1.1
 	github.com/stretchr/testify v1.9.0
 	github.com/unknwon/com v1.0.1
-	golang.org/x/exp v0.0.0-20240707233637-46b078467d37
+	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 )
 
 require (
