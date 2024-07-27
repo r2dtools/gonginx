@@ -77,10 +77,12 @@ func (c *Config) FindDirectives(directiveName string) []Directive {
 			continue
 		}
 
-		directives = append(
-			directives,
-			c.findDirectivesRecursivelyInLoop(directiveName, tree)...,
-		)
+		for _, entry := range tree.GetEntries() {
+			directives = append(
+				directives,
+				c.findDirectivesRecursively(directiveName, tree, entry, false)...,
+			)
+		}
 	}
 
 	return directives
@@ -100,7 +102,7 @@ func (c *Config) FindBlocks(blockName string) []Block {
 		}
 
 		for _, entry := range tree.Entries {
-			blocks = append(blocks, c.findBlocksRecursively(blockName, tree, entry)...)
+			blocks = append(blocks, c.findBlocksRecursively(blockName, tree, entry, false)...)
 		}
 	}
 
@@ -149,21 +151,6 @@ func (c *Config) AddConfigFile(filePath string) (*ConfigFile, error) {
 	}
 
 	return nil, fmt.Errorf("file %s already exists", filePath)
-}
-
-func (c *Config) findDirectivesRecursivelyInLoop(
-	directiveName string,
-	container entryContainer,
-) []Directive {
-	var directives []Directive
-	entries := container.GetEntries()
-	entriesCount := len(entries)
-
-	for i := 0; i < entriesCount; i++ {
-		directives = append(directives, c.findDirectivesRecursively(directiveName, container, entries[i])...)
-	}
-
-	return directives
 }
 
 func (c *Config) parse() error {
@@ -292,6 +279,7 @@ func (c *Config) findDirectivesRecursively(
 	directiveName string,
 	container entryContainer,
 	entry *rawparser.Entry,
+	withInclude bool,
 ) []Directive {
 	var directives []Directive
 	directive := entry.Directive
@@ -300,8 +288,8 @@ func (c *Config) findDirectivesRecursively(
 	if directive != nil {
 		identifier := directive.Identifier
 
-		if identifier == "include" {
-			include := directive.GetFirstValueStr()
+		if withInclude && identifier == "include" {
+			include := c.getAbsPath(directive.GetFirstValueStr())
 			includeFiles, err := filepath.Glob(include)
 
 			if err != nil {
@@ -311,10 +299,14 @@ func (c *Config) findDirectivesRecursively(
 			for _, includePath := range includeFiles {
 				includeConfig, ok := c.parsedFiles[includePath]
 
-				if ok {
+				if !ok {
+					continue
+				}
+
+				for _, entry := range includeConfig.GetEntries() {
 					directives = append(
 						directives,
-						c.findDirectivesRecursivelyInLoop(directiveName, includeConfig)...,
+						c.findDirectivesRecursively(directiveName, includeConfig, entry, withInclude)...,
 					)
 				}
 			}
@@ -331,10 +323,12 @@ func (c *Config) findDirectivesRecursively(
 	}
 
 	if blockDirective != nil {
-		directives = append(
-			directives,
-			c.findDirectivesRecursivelyInLoop(directiveName, blockDirective)...,
-		)
+		for _, bEntry := range blockDirective.GetEntries() {
+			directives = append(
+				directives,
+				c.findDirectivesRecursively(directiveName, blockDirective, bEntry, withInclude)...,
+			)
+		}
 
 		return directives
 	}
@@ -346,13 +340,14 @@ func (c *Config) findBlocksRecursively(
 	blockName string,
 	container entryContainer,
 	entry *rawparser.Entry,
+	withInclude bool,
 ) []Block {
 	var blocks []Block
 	directive := entry.Directive
 	blockDirective := entry.BlockDirective
 
-	if directive != nil && directive.Identifier == "include" {
-		include := directive.GetFirstValueStr()
+	if withInclude && directive != nil && directive.Identifier == "include" {
+		include := c.getAbsPath(directive.GetFirstValueStr())
 		includeFiles, err := filepath.Glob(include)
 
 		if err != nil {
@@ -362,13 +357,15 @@ func (c *Config) findBlocksRecursively(
 		for _, includePath := range includeFiles {
 			includeConfig, ok := c.parsedFiles[includePath]
 
-			if ok {
-				for _, entry := range includeConfig.Entries {
-					blocks = append(
-						blocks,
-						c.findBlocksRecursively(blockName, includeConfig, entry)...,
-					)
-				}
+			if !ok {
+				continue
+			}
+
+			for _, entry := range includeConfig.Entries {
+				blocks = append(
+					blocks,
+					c.findBlocksRecursively(blockName, includeConfig, entry, withInclude)...,
+				)
 			}
 		}
 
@@ -389,7 +386,7 @@ func (c *Config) findBlocksRecursively(
 			for _, httpBlockEntry := range blockDirective.GetEntries() {
 				blocks = append(
 					blocks,
-					c.findBlocksRecursively(blockName, blockDirective, httpBlockEntry)...,
+					c.findBlocksRecursively(blockName, blockDirective, httpBlockEntry, withInclude)...,
 				)
 			}
 		}

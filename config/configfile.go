@@ -13,14 +13,20 @@ type ConfigFile struct {
 }
 
 func (c *ConfigFile) FindDirectives(directiveName string) []Directive {
-	return c.config.findDirectivesRecursivelyInLoop(directiveName, c.configFile)
+	var directives []Directive
+
+	for _, entry := range c.configFile.GetEntries() {
+		directives = append(directives, c.config.findDirectivesRecursively(directiveName, c.configFile, entry, true)...)
+	}
+
+	return directives
 }
 
 func (c *ConfigFile) FindBlocks(blockName string) []Block {
 	var blocks []Block
 
 	for _, entry := range c.configFile.GetEntries() {
-		blocks = append(blocks, c.config.findBlocksRecursively(blockName, c.configFile, entry)...)
+		blocks = append(blocks, c.config.findBlocksRecursively(blockName, c.configFile, entry, true)...)
 	}
 
 	return blocks

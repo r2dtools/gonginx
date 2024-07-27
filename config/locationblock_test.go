@@ -14,9 +14,9 @@ func TestLocationBlock(t *testing.T) {
 
 	serverBlock := serverBlocks[0]
 	locationBlocks := serverBlock.FindLocationBlocks()
-	assert.Len(t, locationBlocks, 3)
+	assert.Len(t, locationBlocks, 7)
 
-	locationBlock := locationBlocks[2]
+	locationBlock := locationBlocks[6]
 	assert.Equal(t, "~", locationBlock.GetModifier())
 	assert.Equal(t, "\\.php$", locationBlock.GetLocationMatch())
 	assert.Equal(t, "location", locationBlock.GetName())
@@ -65,9 +65,9 @@ func TestSetLocationBlockComments(t *testing.T) {
 
 		serverBlock := serverBlocks[1]
 		locationBlocks := serverBlock.FindLocationBlocks()
-		assert.Len(t, locationBlocks, 1)
+		assert.Len(t, locationBlocks, 2)
 
-		locationBlock := locationBlocks[0]
+		locationBlock := locationBlocks[1]
 
 		comments := locationBlock.FindComments()
 		assert.Len(t, comments, 3)

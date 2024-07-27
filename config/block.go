@@ -26,14 +26,20 @@ func (b *Block) SetParameters(parameters []string) {
 }
 
 func (b *Block) FindDirectives(directiveName string) []Directive {
-	return b.config.findDirectivesRecursivelyInLoop(directiveName, b.rawBlock)
+	var directives []Directive
+
+	for _, entry := range b.rawBlock.GetEntries() {
+		directives = append(directives, b.config.findDirectivesRecursively(directiveName, b.rawBlock, entry, true)...)
+	}
+
+	return directives
 }
 
 func (b *Block) FindBlocks(blockName string) []Block {
 	var blocks []Block
 
 	for _, entry := range b.rawBlock.GetEntries() {
-		blocks = append(blocks, b.config.findBlocksRecursively(blockName, b.rawBlock, entry)...)
+		blocks = append(blocks, b.config.findBlocksRecursively(blockName, b.rawBlock, entry, true)...)
 	}
 
 	return blocks
