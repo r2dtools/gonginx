@@ -102,7 +102,7 @@ func (c *Config) FindBlocks(blockName string) []Block {
 		}
 
 		for _, entry := range tree.Entries {
-			blocks = append(blocks, c.findBlocksRecursively(blockName, tree, entry, false)...)
+			blocks = append(blocks, c.findBlocksRecursively(blockName, key, tree, entry, false)...)
 		}
 	}
 
@@ -338,6 +338,7 @@ func (c *Config) findDirectivesRecursively(
 
 func (c *Config) findBlocksRecursively(
 	blockName string,
+	path string,
 	container entryContainer,
 	entry *rawparser.Entry,
 	withInclude bool,
@@ -364,7 +365,7 @@ func (c *Config) findBlocksRecursively(
 			for _, entry := range includeConfig.Entries {
 				blocks = append(
 					blocks,
-					c.findBlocksRecursively(blockName, includeConfig, entry, withInclude)...,
+					c.findBlocksRecursively(blockName, includePath, includeConfig, entry, withInclude)...,
 				)
 			}
 		}
@@ -377,6 +378,7 @@ func (c *Config) findBlocksRecursively(
 
 		if identifier == blockName {
 			blocks = append(blocks, Block{
+				FilePath:  path,
 				config:    c,
 				container: container,
 				rawBlock:  blockDirective,
@@ -386,7 +388,7 @@ func (c *Config) findBlocksRecursively(
 			for _, httpBlockEntry := range blockDirective.GetEntries() {
 				blocks = append(
 					blocks,
-					c.findBlocksRecursively(blockName, blockDirective, httpBlockEntry, withInclude)...,
+					c.findBlocksRecursively(blockName, path, blockDirective, httpBlockEntry, withInclude)...,
 				)
 			}
 		}

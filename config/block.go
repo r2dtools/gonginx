@@ -8,6 +8,7 @@ import (
 )
 
 type Block struct {
+	FilePath  string
 	config    *Config
 	container entryContainer
 	rawBlock  *rawparser.BlockDirective
@@ -39,7 +40,7 @@ func (b *Block) FindBlocks(blockName string) []Block {
 	var blocks []Block
 
 	for _, entry := range b.rawBlock.GetEntries() {
-		blocks = append(blocks, b.config.findBlocksRecursively(blockName, b.rawBlock, entry, true)...)
+		blocks = append(blocks, b.config.findBlocksRecursively(blockName, b.FilePath, b.rawBlock, entry, true)...)
 	}
 
 	return blocks

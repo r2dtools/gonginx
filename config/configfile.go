@@ -26,7 +26,7 @@ func (c *ConfigFile) FindBlocks(blockName string) []Block {
 	var blocks []Block
 
 	for _, entry := range c.configFile.GetEntries() {
-		blocks = append(blocks, c.config.findBlocksRecursively(blockName, c.configFile, entry, true)...)
+		blocks = append(blocks, c.config.findBlocksRecursively(blockName, c.FilePath, c.configFile, entry, true)...)
 	}
 
 	return blocks
