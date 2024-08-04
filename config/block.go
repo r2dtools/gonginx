@@ -3,6 +3,7 @@ package config
 import (
 	"strings"
 
+	"github.com/r2dtools/gonginx/internal/rawdumper"
 	"github.com/r2dtools/gonginx/internal/rawparser"
 	"golang.org/x/exp/slices"
 )
@@ -12,6 +13,7 @@ type Block struct {
 	config    *Config
 	container entryContainer
 	rawBlock  *rawparser.BlockDirective
+	rawDumper *rawdumper.RawDumper
 }
 
 func (b *Block) GetName() string {
@@ -154,6 +156,14 @@ func (b *Block) SetComments(comments []string) {
 	entries = slices.Insert(entries, nIndex, pEntries...)
 
 	setEntries(b.container, entries)
+}
+
+func (b *Block) Dump() string {
+	entry := rawparser.Entry{
+		BlockDirective: b.rawBlock,
+	}
+
+	return b.rawDumper.DumpEntry(&entry)
 }
 
 func (b *Block) findInlineComment(blockDirective *rawparser.BlockDirective) *Comment {

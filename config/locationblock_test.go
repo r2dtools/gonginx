@@ -82,3 +82,22 @@ func TestSetLocationBlockComments(t *testing.T) {
 		assert.Equal(t, "test comment1", comments[0].Content)
 	})
 }
+
+func TestDumpLocationBlock(t *testing.T) {
+	configFile := getConfigFile(t, exampleConfigFileName)
+	serverBlocks := configFile.FindServerBlocksByServerName(".example.com")
+	assert.Len(t, serverBlocks, 2)
+
+	serverBlock := serverBlocks[1]
+	locationBlocks := serverBlock.FindLocationBlocks()
+	assert.Len(t, locationBlocks, 2)
+
+	locationBlock := locationBlocks[1]
+	content := locationBlock.Dump()
+
+	expectedContent :=
+		`location / {    # inline comment
+    return 301 https://www.example.com$request_uri;
+}`
+	assert.Equal(t, expectedContent, content)
+}

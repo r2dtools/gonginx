@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/r2dtools/gonginx/internal/rawdumper"
 	"github.com/r2dtools/gonginx/internal/rawparser"
 	"golang.org/x/exp/slices"
 )
@@ -102,6 +103,7 @@ func newBlock(container entryContainer, config *Config, name string, parameters 
 		config:    config,
 		container: container,
 		rawBlock:  rawBlock,
+		rawDumper: &rawdumper.RawDumper{},
 	}
 
 	entries := container.GetEntries()

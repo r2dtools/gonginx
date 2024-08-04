@@ -21,26 +21,12 @@ func (d *RawDumper) Dump(config *rawparser.Config) (string, error) {
 		return "", errors.New("config is empty")
 	}
 
-	result := d.dumpEntries(config.Entries)
+	result := d.DumpEntries(config.Entries)
 
 	return result, nil
 }
 
-func (d *RawDumper) dumpEntries(entries []*rawparser.Entry) string {
-	var result string
-
-	for _, entry := range entries {
-		if entry != nil {
-			result += strings.Join(entry.StartNewLines, "")
-			result += d.dumpEntry(entry)
-			result += strings.Join(entry.EndNewLines, "")
-		}
-	}
-
-	return result
-}
-
-func (d *RawDumper) dumpEntry(entry *rawparser.Entry) string {
+func (d *RawDumper) DumpEntry(entry *rawparser.Entry) string {
 	result := ""
 
 	if entry.BlockDirective != nil {
@@ -49,6 +35,20 @@ func (d *RawDumper) dumpEntry(entry *rawparser.Entry) string {
 		result += d.dumpDirective(entry)
 	} else if entry.Comment != nil {
 		result += d.dumpComment(entry)
+	}
+
+	return result
+}
+
+func (d *RawDumper) DumpEntries(entries []*rawparser.Entry) string {
+	var result string
+
+	for _, entry := range entries {
+		if entry != nil {
+			result += strings.Join(entry.StartNewLines, "")
+			result += d.DumpEntry(entry)
+			result += strings.Join(entry.EndNewLines, "")
+		}
 	}
 
 	return result
@@ -67,7 +67,7 @@ func (d *RawDumper) dumpBlockDirective(entry *rawparser.Entry) string {
 
 	if blockDirective.Content != nil {
 		d.increaseNestingLevel()
-		result += d.dumpEntries(blockDirective.GetEntries())
+		result += d.DumpEntries(blockDirective.GetEntries())
 		d.decreaseNestingLevel()
 	}
 

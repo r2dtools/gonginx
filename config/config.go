@@ -382,6 +382,7 @@ func (c *Config) findBlocksRecursively(
 				config:    c,
 				container: container,
 				rawBlock:  blockDirective,
+				rawDumper: &rawdumper.RawDumper{},
 			})
 		} else {
 			// blocks can be nested
