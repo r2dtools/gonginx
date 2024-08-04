@@ -153,6 +153,10 @@ func (c *Config) AddConfigFile(filePath string) (*ConfigFile, error) {
 	return nil, fmt.Errorf("file %s already exists", filePath)
 }
 
+func (c *Config) ParseFile(filePath string) error {
+	return c.parseRecursively(filePath)
+}
+
 func (c *Config) parse() error {
 	c.parsedFiles = make(map[string]*rawparser.Config)
 
@@ -231,10 +235,18 @@ func (c *Config) parseRecursively(configFilePath string) error {
 }
 
 func (c *Config) parseFilesByPath(filePath string, override bool) ([]*rawparser.Config, error) {
-	files, err := filepath.Glob(filePath)
+	var files []string
 
-	if err != nil {
-		return nil, err
+	stat, err := os.Stat(filePath)
+
+	if err == nil && stat.Mode().IsRegular() {
+		files = []string{filePath}
+	} else {
+		files, err = filepath.Glob(filePath)
+
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	var trees []*rawparser.Config

@@ -2,11 +2,13 @@ package config
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
+var sitesEnabledPath = "../test/nginx/sites-enabled"
 var nginxConfigFilePath = "../test/nginx/nginx.conf"
 var example2ConfigFilePath = "../test/nginx/sites-enabled/example2.com.conf"
 var exampleConfigFilePath = "../test/nginx/sites-enabled/example.com.conf"
@@ -97,6 +99,31 @@ func TestAddConfigFile(t *testing.T) {
 
 	httpBlocks := configFile.FindHttpBlocks()
 	assert.Len(t, httpBlocks, 1)
+}
+
+func TestParseFile(t *testing.T) {
+	config := parseConfig(t)
+	serverBlocks := config.FindServerBlocksByServerName(".example3.com")
+	assert.Empty(t, serverBlocks)
+
+	path := "../test/example3.com.conf"
+
+	b, err := os.ReadFile(path)
+	assert.Nil(t, err)
+
+	example3ConfigFilePath := filepath.Join(sitesEnabledPath, "example3.com.conf")
+	err = os.WriteFile(example3ConfigFilePath, b, 0644)
+	assert.Nil(t, err)
+	defer os.Remove(example3ConfigFilePath)
+
+	err = config.ParseFile("sites-enabled/example3.com.conf")
+	assert.Nil(t, err)
+
+	serverBlocks = config.FindServerBlocksByServerName(".example3.com")
+	assert.Len(t, serverBlocks, 2)
+
+	serverBlocks = config.FindServerBlocksByServerName("example2.com")
+	assert.Len(t, serverBlocks, 1)
 }
 
 func parseConfig(t *testing.T) *Config {
