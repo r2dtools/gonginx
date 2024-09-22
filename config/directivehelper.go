@@ -42,17 +42,20 @@ func deleteDirectiveInEntityContainer(c entryContainer, callback func(directive 
 	setEntries(c, dEntries)
 }
 
-func addDirective(c entryContainer, directive Directive, begining bool) {
+func addDirective(c entryContainer, directive Directive, toBegining bool, endWithNewLine bool) {
 	entries := c.GetEntries()
 	directive.setContainer(c)
 	entry := &rawparser.Entry{
-		Directive:   directive.rawDirective,
-		EndNewLines: []string{"\n"},
+		Directive: directive.rawDirective,
+	}
+
+	if endWithNewLine {
+		entry.EndNewLines = []string{"\n"}
 	}
 
 	var prevEntry *rawparser.Entry
 
-	if len(entries) > 0 && !begining {
+	if len(entries) > 0 && !toBegining {
 		prevEntry = entries[len(entries)-1]
 	}
 
@@ -60,7 +63,7 @@ func addDirective(c entryContainer, directive Directive, begining bool) {
 		entry.StartNewLines = []string{"\n"}
 	}
 
-	if begining {
+	if toBegining {
 		entries = append([]*rawparser.Entry{entry}, entries...)
 	} else {
 		entries = append(entries, entry)

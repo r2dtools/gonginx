@@ -29,7 +29,7 @@ func TestAddDirectiveInConfigFile(t *testing.T) {
 	testWithConfigFileRollback(t, example2ConfigFilePath, func(t *testing.T) {
 		configFile := getConfigFile(t, example2ConfigFileName)
 		directive := NewDirective("test", []string{"test_value"})
-		configFile.AddDirective(directive, true)
+		configFile.AddDirective(directive, true, true)
 		err := configFile.Dump()
 		assert.Nil(t, err)
 

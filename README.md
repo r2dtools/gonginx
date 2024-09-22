@@ -53,7 +53,7 @@ func main() {
 	serverBlocks := config.FindServerBlocksByServerName("example.com")
 	serverBlock := serverBlocks[0]
 	directive := nginxConfig.NewDirective("ssl_certificate", []string{"/path/to/certificate"})
-	serverBlock.AddDirective(directive, false)
+	serverBlock.AddDirective(directive, false, true)
 
 	err = config.Dump()
 

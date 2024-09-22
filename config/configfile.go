@@ -64,8 +64,8 @@ func (c *ConfigFile) DeleteDirectiveByName(directiveName string) {
 	deleteDirectiveByName(c.configFile, directiveName)
 }
 
-func (c *ConfigFile) AddDirective(directive Directive, begining bool) {
-	addDirective(c.configFile, directive, begining)
+func (c *ConfigFile) AddDirective(directive Directive, begining bool, endWithNewLine bool) {
+	addDirective(c.configFile, directive, begining, endWithNewLine)
 }
 
 func (c *ConfigFile) AddHttpBlock() HttpBlock {

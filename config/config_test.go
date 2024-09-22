@@ -79,11 +79,11 @@ func TestAddConfigFile(t *testing.T) {
 	assert.Nil(t, err)
 
 	directive := NewDirective("directive", []string{"test"})
-	configFile.AddDirective(directive, true)
+	configFile.AddDirective(directive, true, true)
 
 	httpBlock := configFile.AddHttpBlock()
 	directive = NewDirective("http_directive", []string{"http", "directive"})
-	httpBlock.AddDirective(directive, false)
+	httpBlock.AddDirective(directive, false, true)
 
 	err = configFile.Dump()
 	assert.Nil(t, err)

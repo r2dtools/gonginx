@@ -40,7 +40,7 @@ func (b *UpstreamBlock) GetServers() []UpstreamServer {
 }
 
 func (b *UpstreamBlock) AddServer(upstreamServer UpstreamServer) {
-	b.AddDirective(upstreamServer.Directive, false)
+	b.AddDirective(upstreamServer.Directive, false, true)
 }
 
 func (b *UpstreamBlock) SetServers(upstreamServers []UpstreamServer) {

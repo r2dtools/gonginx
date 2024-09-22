@@ -48,8 +48,8 @@ func (b *Block) FindBlocks(blockName string) []Block {
 	return blocks
 }
 
-func (b *Block) AddDirective(directive Directive, begining bool) {
-	addDirective(b.rawBlock, directive, begining)
+func (b *Block) AddDirective(directive Directive, begining bool, endWithNewLine bool) {
+	addDirective(b.rawBlock, directive, begining, endWithNewLine)
 }
 
 func (b *Block) DeleteDirective(directive Directive) {

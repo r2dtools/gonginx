@@ -48,11 +48,11 @@ func TestAddDirectiveInServerBlock(t *testing.T) {
 	testWithConfigFileRollback(t, example2ConfigFilePath, func(t *testing.T) {
 		config, serverBlock := getServerBlock(t, "example2.com")
 		directive := NewDirective("test", []string{"test_value"})
-		serverBlock.AddDirective(directive, true)
+		serverBlock.AddDirective(directive, true, true)
 		err := config.Dump()
 		assert.Nil(t, err)
 
-		config, directive = getServerBlockDirective(t, "example2.com", "test")
+		_, directive = getServerBlockDirective(t, "example2.com", "test")
 		assert.Equal(t, "test_value", directive.GetFirstValue())
 	})
 }
