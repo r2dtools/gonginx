@@ -10,15 +10,18 @@ type ServerBlock struct {
 
 func (s *ServerBlock) GetServerNames() []string {
 	serverNames := []string{}
-
 	directives := s.FindDirectives("server_name")
 
 	if len(directives) == 0 {
 		return serverNames
 	}
 
-	for _, value := range directives[0].GetValues() {
-		serverNames = append(serverNames, strings.TrimSpace(value))
+	for _, directive := range directives {
+		serverNames = append(serverNames, directive.GetValues()...)
+	}
+
+	for index, serverName := range serverNames {
+		serverNames[index] = strings.TrimSpace(serverName)
 	}
 
 	return serverNames

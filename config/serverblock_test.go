@@ -36,7 +36,7 @@ func TestServerBlock(t *testing.T) {
 
 	block := serverBlocks[0]
 	assert.Equal(t, "server", block.GetName())
-	assert.ElementsMatch(t, block.GetServerNames(), []string{"example2.com", "www.example2.com"})
+	assert.ElementsMatch(t, block.GetServerNames(), []string{"example2.com", "www.example2.com", "alias.example2.com"})
 	assert.Equal(t, true, block.HasSSL())
 	assert.Equal(t, "/var/www/html", block.GetDocumentRoot())
 
