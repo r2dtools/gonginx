@@ -60,7 +60,7 @@ func TestFindDirectives(t *testing.T) {
 	config := parseConfig(t)
 
 	directives := config.FindDirectives("server_name")
-	assert.Len(t, directives, 8)
+	assert.Len(t, directives, 9)
 	assert.Equal(t, directives[0].GetValues(), []string{"example.com"})
 }
 
