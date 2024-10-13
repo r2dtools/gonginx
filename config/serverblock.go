@@ -134,8 +134,8 @@ func (s *ServerBlock) FindLocationBlocks() []LocationBlock {
 	return findLocationBlocks(&s.Block)
 }
 
-func (s *ServerBlock) AddLocationBlock(modifier, match string) LocationBlock {
-	return addLocationBlock(&s.Block, modifier, match)
+func (s *ServerBlock) AddLocationBlock(modifier, match string, begining bool) LocationBlock {
+	return addLocationBlock(&s.Block, modifier, match, begining)
 }
 
 func (s *ServerBlock) DeleteLocationBlock(locationBlock LocationBlock) {

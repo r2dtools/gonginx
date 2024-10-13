@@ -80,7 +80,7 @@ func main() {
 	httpBlocks := config.FindHttpBlocks()
 	httpBlock := httpBlocks[0]
 
-	upstreamBlock := httpBlock.AddUpstreamBlock("my_upstream")
+	upstreamBlock := httpBlock.AddUpstreamBlock("my_upstream", false)
 	upstreamBlock.AddServer(nginxConfig.NewUpstreamServer("127.0.0.1", []string{"weight=5"}))
 	err = config.Dump()
 

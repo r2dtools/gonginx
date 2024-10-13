@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/exp/slices"
 )
 
 func TestFindDirectivesInServerBlock(t *testing.T) {
@@ -54,6 +55,21 @@ func TestAddDirectiveInServerBlock(t *testing.T) {
 
 		_, directive = getServerBlockDirective(t, "example2.com", "test")
 		assert.Equal(t, "test_value", directive.GetFirstValue())
+	})
+}
+
+func TestAddLocationBlockInServerBlock(t *testing.T) {
+	testWithConfigFileRollback(t, example2ConfigFilePath, func(t *testing.T) {
+		config, serverBlock := getServerBlock(t, "example2.com")
+		serverBlock.AddLocationBlock("~", "/acme", false)
+
+		err := config.Dump()
+		assert.Nil(t, err)
+
+		locationExists := slices.ContainsFunc(serverBlock.FindLocationBlocks(), func(block LocationBlock) bool {
+			return block.GetLocationMatch() == "/acme" && block.GetModifier() == "~"
+		})
+		assert.True(t, locationExists)
 	})
 }
 

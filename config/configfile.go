@@ -89,7 +89,7 @@ func (c *ConfigFile) DeleteUpstreamBlock(upstreamBlock ServerBlock) {
 }
 
 func (c *ConfigFile) addBlock(name string, parameters []string) Block {
-	return newBlock(c.configFile, c.config, name, parameters)
+	return newBlock(c.configFile, c.config, name, parameters, false)
 }
 
 func (c *ConfigFile) Dump() error {
