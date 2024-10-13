@@ -8,6 +8,13 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+const (
+	upstreamBlockName = "upstream"
+	locationBlockName = "location"
+	httpBlockName     = "http"
+	serverBlockName   = "server"
+)
+
 type Block struct {
 	FilePath  string
 	config    *Config
@@ -196,8 +203,8 @@ func (b *Block) createComment(rawComment *rawparser.Comment, position CommentPos
 	}
 }
 
-func (b *Block) addBlock(name string, parameters []string) Block {
-	return newBlock(b.rawBlock, b.config, name, parameters)
+func (b *Block) addBlock(name string, parameters []string, begining bool) Block {
+	return newBlock(b.rawBlock, b.config, name, parameters, begining)
 }
 
 func (b *Block) setContainer(container entryContainer) {

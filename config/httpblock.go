@@ -28,8 +28,8 @@ func (b *HttpBlock) FindLocationBlocks() []LocationBlock {
 	return findLocationBlocks(&b.Block)
 }
 
-func (b *HttpBlock) AddUpstreamBlock(upstreamName string) UpstreamBlock {
-	block := b.addBlock("upstream", []string{upstreamName})
+func (b *HttpBlock) AddUpstreamBlock(upstreamName string, begining bool) UpstreamBlock {
+	block := b.addBlock(upstreamBlockName, []string{upstreamName}, begining)
 
 	return UpstreamBlock{
 		Block: block,
@@ -37,7 +37,7 @@ func (b *HttpBlock) AddUpstreamBlock(upstreamName string) UpstreamBlock {
 }
 
 func (b *HttpBlock) AddServerBlock() ServerBlock {
-	block := b.addBlock("server", nil)
+	block := b.addBlock(serverBlockName, nil, false)
 
 	return ServerBlock{
 		Block: block,

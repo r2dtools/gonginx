@@ -21,7 +21,7 @@ type upstreamBlockFinder interface {
 func findServerBlocks(finder blockFinder) []ServerBlock {
 	var serverBlocks []ServerBlock
 
-	for _, block := range finder.FindBlocks("server") {
+	for _, block := range finder.FindBlocks(serverBlockName) {
 		serverBlocks = append(serverBlocks, ServerBlock{
 			Block: block,
 		})
@@ -33,7 +33,7 @@ func findServerBlocks(finder blockFinder) []ServerBlock {
 func findLocationBlocks(finder blockFinder) []LocationBlock {
 	var locationBlocks []LocationBlock
 
-	for _, block := range finder.FindBlocks("location") {
+	for _, block := range finder.FindBlocks(locationBlockName) {
 		locationBlocks = append(locationBlocks, LocationBlock{
 			Block: block,
 		})
@@ -45,7 +45,7 @@ func findLocationBlocks(finder blockFinder) []LocationBlock {
 func findHttpBlocks(finder blockFinder) []HttpBlock {
 	var httpBlocks []HttpBlock
 
-	for _, block := range finder.FindBlocks("http") {
+	for _, block := range finder.FindBlocks(httpBlockName) {
 		httpBlocks = append(httpBlocks, HttpBlock{
 			Block: block,
 		})
@@ -57,7 +57,7 @@ func findHttpBlocks(finder blockFinder) []HttpBlock {
 func findUpstreamBlocks(finder blockFinder) []UpstreamBlock {
 	var upstreamBlocks []UpstreamBlock
 
-	for _, block := range finder.FindBlocks("upstream") {
+	for _, block := range finder.FindBlocks(upstreamBlockName) {
 		upstreamBlocks = append(upstreamBlocks, UpstreamBlock{
 			Block: block,
 		})
@@ -92,7 +92,7 @@ func findUpstreamBlocksByName(finder upstreamBlockFinder, upstreamName string) [
 	return upstreamBlocks
 }
 
-func newBlock(container entryContainer, config *Config, name string, parameters []string) Block {
+func newBlock(container entryContainer, config *Config, name string, parameters []string, begining bool) Block {
 	rawBlock := &rawparser.BlockDirective{
 		Identifier: name,
 		Content:    &rawparser.BlockContent{},
@@ -107,11 +107,52 @@ func newBlock(container entryContainer, config *Config, name string, parameters 
 	}
 
 	entries := container.GetEntries()
-	entries = append(entries, &rawparser.Entry{
-		StartNewLines:  []string{"\n"},
+
+	indexToInsert := -1
+	similarBlocksIndexes := []int{}
+
+	for index, entry := range entries {
+		if entry.BlockDirective != nil && entry.BlockDirective.Identifier == name {
+			similarBlocksIndexes = append(similarBlocksIndexes, index)
+		}
+	}
+
+	if len(similarBlocksIndexes) != 0 {
+		if begining {
+			indexToInsert = similarBlocksIndexes[0]
+
+			// skip block comments befor insert
+			for i := similarBlocksIndexes[0] - 1; i >= 0; i-- {
+				if entries[i].Comment == nil {
+					break
+				}
+
+				indexToInsert = i
+			}
+		} else {
+			indexToInsert = similarBlocksIndexes[len(similarBlocksIndexes)-1]
+
+			if indexToInsert == len(entries)-1 {
+				indexToInsert = -1
+			} else {
+				indexToInsert += 1
+			}
+		}
+	}
+
+	entry := &rawparser.Entry{
 		BlockDirective: rawBlock,
-		EndNewLines:    []string{"\n"},
-	})
+		EndNewLines:    []string{"\n\n"},
+	}
+
+	if indexToInsert == -1 {
+		entries = append(entries, entry)
+	} else {
+		if indexToInsert == 0 {
+			entry.StartNewLines = []string{"\n"}
+		}
+		entries = slices.Insert(entries, indexToInsert, entry)
+	}
 
 	setEntries(container, entries)
 
@@ -155,7 +196,7 @@ func deleteBlockEntityContainer(c entryContainer, callback func(block *rawparser
 	setEntries(c, dEntries)
 }
 
-func addLocationBlock(b *Block, modifier, match string) LocationBlock {
+func addLocationBlock(b *Block, modifier, match string, begining bool) LocationBlock {
 	parameters := []string{}
 
 	if modifier != "" {
@@ -166,7 +207,7 @@ func addLocationBlock(b *Block, modifier, match string) LocationBlock {
 		parameters = append(parameters, match)
 	}
 
-	block := b.addBlock("location", parameters)
+	block := b.addBlock(locationBlockName, parameters, begining)
 
 	return LocationBlock{
 		Block: block,

@@ -52,8 +52,8 @@ func (l *LocationBlock) SetLocationMatch(match string) {
 	l.SetParameters(parameters)
 }
 
-func (l *LocationBlock) AddLocationBlock(modifier, match string) LocationBlock {
-	return addLocationBlock(&l.Block, modifier, match)
+func (l *LocationBlock) AddLocationBlock(modifier, match string, begining bool) LocationBlock {
+	return addLocationBlock(&l.Block, modifier, match, begining)
 }
 
 func (l *LocationBlock) DeleteLocationBlock(locationBlock LocationBlock) {
