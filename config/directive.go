@@ -3,7 +3,7 @@ package config
 import (
 	"strings"
 
-	"github.com/r2dtools/gonginx/internal/rawparser"
+	"github.com/r2dtools/gonginxconf/internal/rawparser"
 	"golang.org/x/exp/slices"
 )
 

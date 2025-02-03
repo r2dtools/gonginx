@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/r2dtools/gonginx/internal/rawparser"
+	"github.com/r2dtools/gonginxconf/internal/rawparser"
 	"github.com/stretchr/testify/assert"
 )
 

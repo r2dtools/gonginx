@@ -4,7 +4,7 @@ GoNginx is a library that parses Nginx configurations, enabling you to manipulat
 
 ## Install
 ```
-go get github.com/r2dtools/gonginx
+go get github.com/r2dtools/gonginxconf
 ```
 
 ## Examples
@@ -15,7 +15,7 @@ package main
 import (
 	"fmt"
 
-	nginxConfig "github.com/r2dtools/gonginx/config"
+	nginxConfig "github.com/r2dtools/gonginxconf/config"
 )
 
 func main() {
@@ -40,7 +40,7 @@ func main() {
 package main
 
 import (
-	nginxConfig "github.com/r2dtools/gonginx/config"
+	nginxConfig "github.com/r2dtools/gonginxconf/config"
 )
 
 func main() {
@@ -67,7 +67,7 @@ func main() {
 package main
 
 import (
-	nginxConfig "github.com/r2dtools/gonginx/config"
+	nginxConfig "github.com/r2dtools/gonginxconf/config"
 )
 
 func main() {

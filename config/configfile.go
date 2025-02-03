@@ -3,7 +3,7 @@ package config
 import (
 	"os"
 
-	"github.com/r2dtools/gonginx/internal/rawparser"
+	"github.com/r2dtools/gonginxconf/internal/rawparser"
 )
 
 type ConfigFile struct {

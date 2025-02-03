@@ -9,8 +9,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/r2dtools/gonginx/internal/rawdumper"
-	"github.com/r2dtools/gonginx/internal/rawparser"
+	"github.com/r2dtools/gonginxconf/internal/rawdumper"
+	"github.com/r2dtools/gonginxconf/internal/rawparser"
 	"github.com/unknwon/com"
 	"golang.org/x/exp/maps"
 )

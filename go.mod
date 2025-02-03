@@ -1,4 +1,4 @@
-module github.com/r2dtools/gonginx
+module github.com/r2dtools/gonginxconf
 
 go 1.22
 

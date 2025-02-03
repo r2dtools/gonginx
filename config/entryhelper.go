@@ -1,6 +1,6 @@
 package config
 
-import "github.com/r2dtools/gonginx/internal/rawparser"
+import "github.com/r2dtools/gonginxconf/internal/rawparser"
 
 type entryContainer interface {
 	GetEntries() []*rawparser.Entry
