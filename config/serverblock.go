@@ -21,7 +21,7 @@ func (s *ServerBlock) GetServerNames() []string {
 	}
 
 	for index, serverName := range serverNames {
-		serverNames[index] = strings.TrimSpace(serverName)
+		serverNames[index] = strings.Trim(serverName, " \"")
 	}
 
 	return serverNames
